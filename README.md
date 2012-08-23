@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/jmarca/cas_validate.png)](http://travis-ci.org/jmarca/cas_validate)
 # CAS Validate
 
 This is a utility to facilitate validating a web service based on
