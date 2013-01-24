@@ -9,7 +9,7 @@ var env = process.env;
 var chost = process.env.CAS_HOST;
 var cuser = process.env.CAS_USER;
 var cpass = process.env.CAS_PASS;
-var casurl = 'https://'+chost + '/cas/login'
+var casurl = chost + '/cas/login'
 
 var testhost = env.CAS_VALIDATE_TEST_URL || '127.0.0.1'
 var testport = env.CAS_VALIDATE_TEST_PORT || 3000
@@ -47,7 +47,7 @@ function _login_handler(rq,callback){
         var form_regex = /id="fm1".*action="(.*)" method="post"/;
         var result = form_regex.exec(b)
         var opts={}
-        opts.url='https://cas.ctmlabs.net'+result[1]
+        opts.url=chost+result[1]
         opts.form={'username':cuser
                   ,'password':cpass
                   ,'submit':'LOGIN'
@@ -83,7 +83,7 @@ function cas_login_function(rq,callback){
          }
 
 function cas_logout_function(rq,callback){
-    var logouturl = 'https://'+chost + '/cas/logout';
+    var logouturl = chost + '/cas/logout';
     rq(logouturl
        ,function(e,r,b){
            // give the server a chance to fire off its post
@@ -681,8 +681,9 @@ describe('cas_validate.ssoff',function(){
     })
 
     it('should delete the session when the user signs out of CAS server (single sign off)',function(done){
-        if(testhost === '127.0.0.1'){
+        if(testhost === '127.0.0.1' && testhost !== parseUrl(chost).hostname){
             // this test generally will fail unless CAS can post to this host
+            // we assume that if testhost == cas_host, the post will be successful
             console.log('test aborted on 127.0.0.1.  Try re-running with the CAS_VALIDATE_TEST_URL set to a url that your CAS server can post to')
             return done()
         }
@@ -750,7 +751,8 @@ describe('cas_validate.logout',function(){
                   .use(connect.session({ store: new RedisStore }))
 
             app.use('/username',cas_validate.username)
-            app.use('/quit',cas_validate.logout({}))
+            app.use('/quit',cas_validate.logout({'cas_host':chost
+                                                 ,'service':'http://'+testhost+':'+testport}))
             app.use(cas_validate.ssoff())
             app.use(cas_validate.ticket({'cas_host':chost
                                          ,'service':'http://'+testhost+':'+testport}))
@@ -811,6 +813,7 @@ describe('cas_validate.logout',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/quit'
                                 ,followRedirect:true}
                                ,function(e,r,b){
+                                   if ( e ) {console.log(e)}
                                     r.statusCode.should.equal(200)
                                     should.exist(b)
                                     b.should.equal('hello world (not logged in)')
