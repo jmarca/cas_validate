@@ -100,6 +100,7 @@ describe('cas_validate.redirect',function(){
 
     before(
         function(done){
+            console.log('CAS HOST',chost)
             app = connect()
                   .use(connect.cookieParser('barley wheat napoleon'))
                   .use(connect.session({ store: new RedisStore }))
@@ -127,9 +128,11 @@ describe('cas_validate.redirect',function(){
                                ,function(e,r,b){
                                    console.log({url:'http://'+ testhost +':'+testport+'/'})
                                     r.statusCode.should.equal(307)
-                                    r.headers.location.should.equal(casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2Findex.html')
-                                    should.not.exist(b)
-                                    cb()
+                                   var expect = casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2Findex.html'
+                                   console.log('location',r.headers.location,expect)
+                                   r.headers.location.should.equal(expect)
+                                   should.not.exist(b)
+                                   cb()
                                 }
                                )
                          }]
