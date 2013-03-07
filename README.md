@@ -407,8 +407,9 @@ to set lots of environment variables.
 
 ## Environment variables
 
-* CAS_HOST:  no default.  The CAS host (bare host name or number; not
-  https, not /cas/login)
+* CAS_HOST: no default.  The CAS host, which may include the protocol
+  (https://) and the port, in addition to the hostname.  But it should
+  not include the path (e.g., /cas/login)
 
 * CAS_USER:  no default.  Your CAS username you want to use for the
   tests.
@@ -419,7 +420,8 @@ to set lots of environment variables.
 * CAS_VALIDATE_TEST_URL: Default is '127.0.0.1'.  If you want to test
   single sign out (the `ssoff` service), then you'll need to run your
   test server on a public machine, with a URL that the CAS server can
-  send a POST to.
+  send a POST to.  SSOFF tests will be skipped if CAS_VALIDATE_TEST_URL
+  is 127.0.0.1 and the hostname part of CAS_HOST is *not* 127.0.0.1.
 
 * CAS_VALIDATE_TEST_PORT: Default is 3000.  If you are already using
   port 3000 for something else, change this.  Also, make sure that
