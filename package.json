@@ -22,7 +22,7 @@
     "hiredis": "",
     "redis": "",
     "underscore": "",
-    "request": "",
+    "request": "~2.16",
     "winston": ""
   },
   "devDependencies": {
