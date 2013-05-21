@@ -102,174 +102,174 @@ function cas_logout_function(rq,callback){
 
 
 
-describe('cas_validate.redirect',function(){
-    var app,server
+// describe('cas_validate.redirect',function(){
+//     var app,server
 
-    before(
-        function(done){
-            app = connect()
-                  .use(connect.cookieParser('barley wheat napoleon'))
-                  .use(connect.session({ store: new RedisStore }))
-                  .use(cas_validate.redirect({'cas_host':chost
-                                             ,'service':'http://'+ testhost +':'+testport+'/index.html'})
-                      )
-                  .use(function(req, res, next){
-                      should.not.exist(req)
-                      res.end('hello world')
-                  });
-            server = app.listen(testport,done)
-        })
-    after(function(done){
-        server.close(done)
-    })
-    it('should redirect when no session is established',function(done){
+//     before(
+//         function(done){
+//             app = connect()
+//                   .use(connect.cookieParser('barley wheat napoleon'))
+//                   .use(connect.session({ store: new RedisStore }))
+//                   .use(cas_validate.redirect({'cas_host':chost
+//                                              ,'service':'http://'+ testhost +':'+testport+'/index.html'})
+//                       )
+//                   .use(function(req, res, next){
+//                       should.not.exist(req)
+//                       res.end('hello world')
+//                   });
+//             server = app.listen(testport,done)
+//         })
+//     after(function(done){
+//         server.close(done)
+//     })
+//     it('should redirect when no session is established',function(done){
 
-        async.waterfall([function(cb){
-                             _setup_request(cb)
-                         }
-                        ,function(rq,cb){
+//         async.waterfall([function(cb){
+//                              _setup_request(cb)
+//                          }
+//                         ,function(rq,cb){
 
-                             rq({url:'http://'+ testhost +':'+testport+'/'
-                                ,followRedirect:false}
-                               ,function(e,r,b){
-                                    r.statusCode.should.equal(307)
-                                    r.headers.location.should.equal(casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2Findex.html')
-                                    should.not.exist(b)
-                                    cb()
-                                }
-                               )
-                         }]
-                       ,done
-                       )
-
-
-    })
-
-    it('should also redirect when session is established',function(done){
-
-        async.waterfall([function(cb){
-                             _setup_request(cb)
-                         }
-                        ,function(rq,cb){
-
-                             // set up a session with CAS server
-                             cas_login_function(rq
-                                               ,function(e){
-                                                    if(e) console.log(e)
-                                                    return cb(e,rq)
-                                                })
-                         }
-                        ,function(rq,cb){
-                             rq({url:'http://'+ testhost +':'+testport+'/'
-                                ,followRedirect:false}
-                               ,function(e,r,b){
-                                    r.statusCode.should.equal(307)
-                                    r.headers.location.should.equal(casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2Findex.html')
-                                    should.not.exist(b)
-                                    cb()
-                                }
-                               )
-
-                         }]
-                       ,done
-                       )
-    })
-
-})
+//                              rq({url:'http://'+ testhost +':'+testport+'/'
+//                                 ,followRedirect:false}
+//                                ,function(e,r,b){
+//                                     r.statusCode.should.equal(307)
+//                                     r.headers.location.should.equal(casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2Findex.html')
+//                                     should.not.exist(b)
+//                                     cb()
+//                                 }
+//                                )
+//                          }]
+//                        ,done
+//                        )
 
 
+//     })
 
-describe('cas_validate.check_and_return',function(){
+//     it('should also redirect when session is established',function(done){
 
-    var app
-    var server
-    before(
-        function(done){
-            app = connect()
-                  .use(connect.cookieParser('barley Waterloo Napoleon'))
-                  .use(connect.session({ store: new RedisStore }))
-            app.use(cas_validate.ticket({'cas_host':chost}))
-            app.use('/valid'
-                   ,function(req, res, next){
-                        if(req.session && req.session.st){
-                            return res.end('cas single sign on established in /valid path')
-                        }else{
-                            return res.end('hello world from /valid path, no session')
-                        }
+//         async.waterfall([function(cb){
+//                              _setup_request(cb)
+//                          }
+//                         ,function(rq,cb){
 
-                    });
-            app.use(cas_validate.check_and_return({'cas_host':chost
-                                                  ,'service':'http://'+ testhost +':'+testport+'/valid'}))
-            app.use('/'
-                   ,function(req, res, next){
-                      // should never get here
-                      if(req.session && req.session.st){
-                          return res.end('error choke and die');
-                      }else{
-                          return res.end('hello world choke and die')
-                      }
-                    });
-            server=app.listen(testport,done)
+//                              // set up a session with CAS server
+//                              cas_login_function(rq
+//                                                ,function(e){
+//                                                     if(e) console.log(e)
+//                                                     return cb(e,rq)
+//                                                 })
+//                          }
+//                         ,function(rq,cb){
+//                              rq({url:'http://'+ testhost +':'+testport+'/'
+//                                 ,followRedirect:false}
+//                                ,function(e,r,b){
+//                                     r.statusCode.should.equal(307)
+//                                     r.headers.location.should.equal(casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2Findex.html')
+//                                     should.not.exist(b)
+//                                     cb()
+//                                 }
+//                                )
 
-        })
+//                          }]
+//                        ,done
+//                        )
+//     })
 
-    after(function(done){
-        server.close(done)
-    })
-
-    it('should return without asking for login when no session is established',function(done){
-
-        async.waterfall([function(cb){
-                             _setup_request(cb)
-                         }
-                        ,function(rq,cb){
-
-                             rq({url:'http://'+ testhost +':'+testport+'/'
-                                ,followRedirect:true}
-                               ,function(e,r,b){
-                                    r.statusCode.should.equal(200)
-                                    should.exist(b)
-                                    b.should.equal('hello world from /valid path, no session')
-                                    cb()
-                                }
-                               )
-                         }]
-                       ,done
-                       )
-
-    })
-
-    it('should not redirect when a session is established',function(done){
-
-        async.waterfall([function(cb){
-                             _setup_request(cb)
-                         }
-                        ,function(rq,cb){
-
-                             // set up a session with CAS server
-                             cas_login_function(rq
-                                               ,function(e){
-                                                    return cb(e,rq)
-                                                })
-                         }
-                        ,function(rq,cb){
-                             rq({url:'http://'+ testhost +':'+testport+'/'}
-                               ,function(e,r,b){
-                                    r.statusCode.should.equal(200)
-                                    should.exist(b)
-                                    b.should.equal('cas single sign on established in /valid path')
-                                    cb()
-                                }
-                               )
-
-                         }]
-                       ,done
-                       )
+// })
 
 
-    })
 
-})
+// describe('cas_validate.check_and_return',function(){
+
+//     var app
+//     var server
+//     before(
+//         function(done){
+//             app = connect()
+//                   .use(connect.cookieParser('barley Waterloo Napoleon'))
+//                   .use(connect.session({ store: new RedisStore }))
+//             app.use(cas_validate.ticket({'cas_host':chost}))
+//             app.use('/valid'
+//                    ,function(req, res, next){
+//                         if(req.session && req.session.st){
+//                             return res.end('cas single sign on established in /valid path')
+//                         }else{
+//                             return res.end('hello world from /valid path, no session')
+//                         }
+
+//                     });
+//             app.use(cas_validate.check_and_return({'cas_host':chost
+//                                                   ,'service':'http://'+ testhost +':'+testport+'/valid'}))
+//             app.use('/'
+//                    ,function(req, res, next){
+//                       // should never get here
+//                       if(req.session && req.session.st){
+//                           return res.end('error choke and die');
+//                       }else{
+//                           return res.end('hello world choke and die')
+//                       }
+//                     });
+//             server=app.listen(testport,done)
+
+//         })
+
+//     after(function(done){
+//         server.close(done)
+//     })
+
+//     it('should return without asking for login when no session is established',function(done){
+
+//         async.waterfall([function(cb){
+//                              _setup_request(cb)
+//                          }
+//                         ,function(rq,cb){
+
+//                              rq({url:'http://'+ testhost +':'+testport+'/'
+//                                 ,followRedirect:true}
+//                                ,function(e,r,b){
+//                                     r.statusCode.should.equal(200)
+//                                     should.exist(b)
+//                                     b.should.equal('hello world from /valid path, no session')
+//                                     cb()
+//                                 }
+//                                )
+//                          }]
+//                        ,done
+//                        )
+
+//     })
+
+//     it('should not redirect when a session is established',function(done){
+
+//         async.waterfall([function(cb){
+//                              _setup_request(cb)
+//                          }
+//                         ,function(rq,cb){
+
+//                              // set up a session with CAS server
+//                              cas_login_function(rq
+//                                                ,function(e){
+//                                                     return cb(e,rq)
+//                                                 })
+//                          }
+//                         ,function(rq,cb){
+//                              rq({url:'http://'+ testhost +':'+testport+'/'}
+//                                ,function(e,r,b){
+//                                     r.statusCode.should.equal(200)
+//                                     should.exist(b)
+//                                     b.should.equal('cas single sign on established in /valid path')
+//                                     cb()
+//                                 }
+//                                )
+
+//                          }]
+//                        ,done
+//                        )
+
+
+//     })
+
+// })
 
 describe('cas_validate.check_or_redirect and cas_validate.ticket',function(){
     var app,server;
@@ -311,6 +311,27 @@ describe('cas_validate.check_or_redirect and cas_validate.ticket',function(){
                        ,done
                        )
 
+
+    })
+
+    it('should not be a baby when somebody spoofs a bad ticket',function(done){
+
+        async.waterfall([function(cb){
+                             _setup_request(cb)
+                         }
+                        ,function(rq,cb){
+                             rq({url:'http://'+ testhost +':'+testport+'/?ticket=diediedie'}
+                               ,function(e,r,b){
+                                    r.statusCode.should.equal(200)
+                                    should.exist(b)
+                                    b.should.match(/Central Authentication Service/)
+                                    cb()
+                                }
+                               )
+
+                         }]
+                       ,done
+                       )
 
     })
 
