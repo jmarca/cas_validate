@@ -22,6 +22,7 @@
     "hiredis": "",
     "redis": "",
     "underscore": "",
+    "libxmljs": "",
     "request": "~2.16",
     "winston": ""
   },
