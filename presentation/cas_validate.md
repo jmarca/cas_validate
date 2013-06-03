@@ -12,12 +12,12 @@
 # Hello, my name is James
 
 * Transportation engineering PhD
-* Research scientist with UCI ITS[^1]
+* Research scientist with UCI ITS^[Until July 1!]
 * https://github.com/jmarca
 * http://contourline.wordpress.com
 * james@activimetrics.com
 
-[^1] Until July 1!
+
 
 --------------
 
@@ -27,60 +27,38 @@ Everybody here knows more about CAS than I do.
 
 This talk is about *using* CAS
 
-# CAS + ldap
+--------------
 
-* We used to use Drupal for our research group's website
-* We used Drupal to create accounts
-* Drupal used ldap and CAS
+# Use case:  CAS + ldap
+
+* Used to use Drupal
+* Drupal was set up to use ldap and CAS
 * So we used ldap and CAS
 
 ------------------
 
-# Single Sign-on, Single Sign-off
+# Single sign on, single sign off
 
-A picture here
-
-Publicity website  <-->  Project websites
-
-We want to log in to the public portal, and then keep that login for
-all of the individual project websites, developed by independent
-researchers.
-
-We tried and failed in past years to require everybody to use
-*X*
+* Caltrans sponsors liked the website, but
+* They didn't like signing in again to project sites
+* Need single sign on, sign off
 
 ----------------------
 
 # I use node.js
 
-JavaScript on the server.
-
-Fast because V8 is fast
-
-Clean, single-threaded non-blocking design
-
-What's not to like?
+* JavaScript on the server.
+* Fast because V8 is fast
+* Clean, single-threaded non-blocking design
+* What's not to like?
 
 ----------------------
 
 # CAS support in node.js
 
-The node.js packaging system is npm.
-
-npm search cas:  lots of options
-
-none supported single sign out
-
-----------------------
-
-# Excellent ldapjs
-
-## (Drop this slide)
-
-There is an excellent ldap library developed by the Riak guys
-
-We wrote some small adapters to allow us to manipulate our ldap
-directory from node.js
+* The node.js packaging system is npm.
+* `npm search cas`:  lots of options
+* but none supported single sign out
 
 ----------------------
 
@@ -88,24 +66,27 @@ directory from node.js
 
 * repository:  https://github.com/jmarca/cas_validate
 * installation: npm install cas_validate
-* a plugin to Express and Connect
+* a plugin to [Express](http://www.expressjs.com/) and [Connect](http://senchalabs.github.com/connect/)
 
 ---------------------
 
-# Program flow
+# Program requirements
 
-This is a figure, probably
+* Fixme Figure
+* Express is route based
+* public routes:
+  * check if logged in,
+  * but don't *require* a login.
+* restricted routes:
+  * require a login,
+  * maybe check permissions, etc
 
-Express is route based
+-----------------------
 
-For basic hello, just check if logged in, but don't require a login.
+# Single Sign On
 
-For access to restricted areas, require a login, and maybe check
-permissions, etc
-
-A login here is a login everywhere, and vice versa
-
-A logout here is a logout everywhere, and vice versa
+* A login here is a login everywhere, and vice versa
+* A logout here is a logout everywhere, and vice versa
 
 ------------------------
 
@@ -130,7 +111,7 @@ Thanks
 
 -----------------------------
 
-```
+``` javascript
 var express = require('express')
 var RedisStore = require('connect-redis')(express);
 var app = express()
