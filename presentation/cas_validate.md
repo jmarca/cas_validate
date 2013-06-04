@@ -12,7 +12,7 @@
 # Hello, my name is James
 
 * Transportation engineering PhD
-* Research scientist with UCI ITS^[Until July 1!]
+* Research scientist with UCI ITS
 * https://github.com/jmarca
 * http://contourline.wordpress.com
 * james@activimetrics.com
@@ -111,7 +111,7 @@ Thanks
 
 -----------------------------
 
-``` javascript
+``` language-javascript
 var express = require('express')
 var RedisStore = require('connect-redis')(express);
 var app = express()
@@ -130,19 +130,28 @@ app
 * more complicated, but still easy
 
 -----------------------------
-```
-var querystring = require('querystring')
-var cas_host = 'https://my.cas.host' // configurable
-var login_service = '/cas/login'     // oops, hardcoded!
 
+## Prerequisites:
+
+``` language-javascript
+var querystring = require('querystring')
+// configurable
+var cas_host = 'https://my.cas.host'
+var login_service = '/cas/login'
+```
+
+----------------------------
+
+``` language-javascript
 var redirecter = function (req,res,next){
-    // decide endpoint where CAS server will return
+    // decide endpoint where CAS server
+    // will return to
     var service = determine_service(req)
     var queryopts = {'service':service}
-    res.writeHead(307, { 'location': cas_host+login_service
-                          +'?'
-                          +querystring.stringify(queryopts)
-                       })
+    res.writeHead(307,
+        { 'location': cas_host+login_service +'?'
+                      +querystring.stringify(queryopts)
+        })
     return res.end()
 }
 ```
@@ -151,9 +160,12 @@ var redirecter = function (req,res,next){
 
 # Listen for CAS reply
 
+* parse incoming query for `ticket` parameter
+
+
 -----------------------------
 
-```
+``` language-javascript
 var ticket_check = function(req,res,next){
     var url = parseUrl(req.url,true);
     if(url.query === undefined || url.query.ticket === undefined){
@@ -161,16 +173,60 @@ var ticket_check = function(req,res,next){
         return next(); // move along to the next route
     }
     logger.debug('have ticket')
-    // store the ticket in the session
-    req.session.ticket = url.query.ticket
-    ...
-
 ```
+
 -----------------------------
 
 # Check ticket validity
 
-* The trickiest part
+* Ticket is "one time use"
+* Directly connect with CAS server to check validity of ticket
+* Using the Request library
+* Cheating! Using regular expressions to parse response
+* Redis:  use Redis to pair ticket and session
 
-   * Use connect.cookieParser,
-    connect.session, with connect-redis)
+------------------------------
+
+## Prerequisites:
+
+``` language-javascript
+
+var cas_host = 'https://my.cas.host' // configurable
+var validation_service = '/cas/serviceValidate'
+var redclient = redis.createClient();
+
+```
+
+------------------------------
+
+``` language-javascript
+var ticket = url.query.ticket;
+var service = opt_service ? opt_service : determine_service(req)
+
+var cas_uri =  cas_host+validation_service +'?'
+     +querystring.stringify({'service':service,'ticket':ticket});
+request({uri:cas_uri}, callback)
+    return null;
+});
+```
+
+------------------------------
+
+``` language-javascript
+function callback(error, response, body) {
+    if (!error && response.statusCode === 200) {
+        if(/cas:authenticationSuccess/.exec(body)){
+            if(/<cas:user>(\w+)<\/cas:user>/.exec(body)){
+                req.session.name = RegExp.$1;
+            }
+            req.session.st = ticket;
+            redclient.set(ticket,req.sessionID);
+            next();
+        }else{
+            next(new Error('authentication failed'));
+        }
+    }else{
+        next(new Error('authentication failed'));
+    }
+
+```
