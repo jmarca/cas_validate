@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>A node.js CAS module</title>
+        <meta name="description" content="A presentation describing cas_validate">
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/prism.css">
+        <link rel="stylesheet" href="css/stack.css">
+        <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+
+<style>
+
+.big {
+  font-size: 128px;
+}
+
+.caption {
+  font-size: 96px;
+  text-align: center;
+  text-shadow: 0px 2px 6px rgba(0,0,0,.5);
+}
+
+</style>
+<body class="overview">
+<section class="slide level1" id="a-node.js-module-for-cas">
+<h1>A node.js module for CAS</h1>
+</section>
+<section class="slide level1" id="hello-my-name-is-james">
+<h1>Hello, my name is James</h1>
+<ul class="incremental">
+<li>Transportation engineering PhD</li>
+<li>Research scientist with UCI ITS</li>
+<li>https://github.com/jmarca</li>
+<li>http://contourline.wordpress.com</li>
+<li>james@activimetrics.com</li>
+</ul>
+</section>
+<section class="slide level1"
+         style="background:url(figs/lavender_2.jpg);background-position:bottom right;   background-repeat:no-repeat;background-size:100%">
+<p><br></p>
+</section>
+<section class="slide level1" id="cas">
+<h1>CAS</h1>
+<p>I don't know anything about CAS internals.</p>
+<p>This talk is about <em>using</em> CAS</p>
+</section>
+<section class="slide level1" id="use-case-cas-ldap">
+<h1>Use case: CAS + ldap</h1>
+<ul class="incremental">
+<li>Used to use Drupal</li>
+<li>Drupal was set up to use ldap and CAS</li>
+<li>So we used ldap and CAS</li>
+</ul>
+</section>
+<section class="slide level1" id="single-sign-on-single-sign-off">
+<h1>Single sign on, single sign off</h1>
+<ul class="incremental">
+<li>Caltrans sponsors liked the website, but</li>
+<li>They didn't like signing in again to project sites</li>
+<li>Need single sign on, sign off</li>
+</ul>
+</section>
+<section class="slide level1" id="i-use-node.js">
+<h1>I use node.js</h1>
+<ul class="incremental">
+<li>JavaScript on the server.</li>
+<li>Fast because V8 is fast</li>
+<li>Clean, single-threaded non-blocking design</li>
+<li>What's not to like?</li>
+</ul>
+</section>
+<section class="slide level1" id="cas-support-in-node.js">
+<h1>CAS support in node.js</h1>
+<ul class="incremental">
+<li>The node.js packaging system is npm.</li>
+<li><code>npm search cas</code>: lots of options</li>
+<li>but none supported single sign out</li>
+</ul>
+</section>
+<section class="slide level1" id="cas-validate">
+<h1>CAS Validate</h1>
+<ul class="incremental">
+<li>repository: https://github.com/jmarca/cas_validate</li>
+<li>installation: npm install cas_validate</li>
+<li>a plugin to <a href="http://www.expressjs.com/">Express</a> and <a href="http://senchalabs.github.com/connect/">Connect</a></li>
+</ul>
+</section>
+<section class="slide level1" id="node.js-idioms">
+<h1>Node.js idioms</h1>
+<h2 id="a-brief-digression">A brief digression</h2>
+</section>
+<section class="slide level1" id="non-blocking-by-design">
+<h1>Non-blocking by design</h1>
+<ul class="incremental">
+<li>file i/o</li>
+<li>web operations</li>
+<li>db access</li>
+<li>etc</li>
+</ul>
+</section>
+<section class="slide level1" id="async-needs-callbacks">
+<h1>Async needs callbacks</h1>
+<p><code>fs.readFile(filename, [encoding], [callback])</code></p>
+<p>Asynchronously reads the entire contents of a file:</p>
+<pre class="language-javascript"><code>fs.readFile(&#39;/etc/passwd&#39;, function (err, data) {
+  if (err) throw err;
+  console.log(data);
+});</code></pre>
+</section>
+<section class="slide level1" id="functionerr-data">
+<h1>function(err, data)</h1>
+<p>The callback is passed two arguments <code>(err, data)</code>. Check for errors, then handle <code>data</code>.</p>
+</section>
+<section class="slide level1" id="callback-is-the-last-argument">
+<h1>callback is the last argument</h1>
+<p>example from node-redis code</p>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>RedisClient.prototype.send_command =
+       function (command, args, callback) {
+    if (Array.isArray(args)) {
+        if (typeof callback === &quot;function&quot;) {
+        } else if (! callback) {
+            last_arg_type = typeof args[args.length-1];
+            if (last_arg_type === &quot;function&quot;
+                || last_arg_type === &quot;undefined&quot;) {
+                callback = args.pop();
+            }
+        } else { throw new Error(&quot;...&quot;);}
+    } else { throw new Error(&quot;...&quot;); }
+}</code></pre>
+</section>
+<section class="slide level1" id="closures-are-used">
+<h1>Closures are used</h1>
+<pre class="language-javascript"><code>var fs = require(&#39;fs&#39;)
+function doSomething(done){
+    function callback(err, data) {
+        if (err) throw err
+        return done(null,data)
+    })
+    fs.readFile(&#39;hpms/data.txt&#39;,&#39;utf8&#39;,
+                callback)
+}</code></pre>
+</section>
+<section class="slide level1" id="end-of-digression">
+<h1>End of digression</h1>
+<p>Except:</p>
+<ul class="incremental">
+<li>semicolons are optional</li>
+<li>comma first notation is popular</li>
+</ul>
+</section>
+<section class="slide level1" id="program-requirements">
+<h1>Program requirements</h1>
+<ul class="incremental">
+<li>Express is route based</li>
+<li>public routes:
+<ul class="incremental">
+<li>check if logged in,</li>
+<li>but don't <em>require</em> a login.</li>
+</ul></li>
+<li>restricted routes:
+<ul class="incremental">
+<li>require a login,</li>
+<li>check permissions, etc</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level1" id="single-sign-onoff">
+<h1>Single Sign On/Off</h1>
+<ul class="incremental">
+<li>A login here=login everywhere
+<ul class="incremental">
+<li>and vice versa</li>
+</ul></li>
+<li>A logout here=logout everywhere
+<ul class="incremental">
+<li>and vice versa</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level1" id="cas-documentation-is-excellent">
+<h1>CAS documentation is excellent</h1>
+<p>Thanks</p>
+</section>
+<section class="slide level1" id="basic-login-task">
+<h1>Basic login task</h1>
+<ol class="incremental" type="1">
+<li>establish a session with the client</li>
+<li>ask the client to redirect to the CAS server</li>
+<li>expect a reply back from the CAS server with a ticket</li>
+<li>check the ticket's validity directly with the CAS server</li>
+</ol>
+</section>
+<section class="slide level1" id="establish-a-session-with-a-client">
+<h1>Establish a session with a client</h1>
+<ul class="incremental">
+<li>use standard connect/express middleware</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>var express = require(&#39;express&#39;)
+var RedisStore =
+     require(&#39;connect-redis&#39;)(express);
+var app = express()
+app
+ .use(express.logger({buffer:5000}))
+ .use(express.bodyParser())
+ .use(express.cookieParser(&#39;tall barley at Waterloo&#39;))
+ .use(express.session({ store: new RedisStore }))</code></pre>
+</section>
+<section class="slide level1" id="redirect-to-cas-server">
+<h1>Redirect to CAS server</h1>
+<ul class="incremental">
+<li>more complicated, but still easy</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="prerequisites">Prerequisites:</h2>
+<pre class="language-javascript"><code>var querystring = require(&#39;querystring&#39;)
+// configurable
+var cas_host = &#39;https://my.cas.host&#39;
+var login_service = &#39;/cas/login&#39;</code></pre>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>var redirecter = function (req,res,next){
+    // decide endpoint where CAS server
+    // will return to
+    var service = determine_service(req)
+    var queryopts = {&#39;service&#39;:service}
+    res.writeHead(307,
+        { &#39;location&#39;: cas_host+login_service +&#39;?&#39;
+               +querystring.stringify(queryopts)
+        })
+    return res.end()
+}</code></pre>
+</section>
+<section class="slide level1" id="listen-for-cas-reply">
+<h1>Listen for CAS reply</h1>
+<ul class="incremental">
+<li>parse incoming query for <code>ticket</code> parameter</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>function ticket_check(req,res,next){
+    var url = parseUrl(req.url,true);
+    if( url.query === undefined
+       || url.query.ticket === undefined){
+        logger.debug(&#39;moving along, no ticket&#39;);
+        return next(); // next route
+    }
+    logger.debug(&#39;have ticket&#39;)
+    ...</code></pre>
+</section>
+<section class="slide level1" id="check-ticket-validity">
+<h1>Check ticket validity</h1>
+<blockquote>
+<p>The request MUST include a valid service ticket, passed as the HTTP request parameter, &quot;ticket&quot;.</p>
+</blockquote>
+<ul class="incremental">
+<li>Directly connect with CAS server to check validity of ticket</li>
+<li>Using the Request library</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="prerequisites-1">Prerequisites:</h2>
+<pre class="language-javascript"><code>var redis = require(&quot;redis&quot;)
+var redclient = redis.createClient();
+redclient.on(&quot;error&quot;, function (err) {
+    logger.error(&quot;Redis Client Error: &quot; + err);
+});</code></pre>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>function ticket_check(req,res,next){
+    ...
+    var ticket = url.query.ticket;
+    var service = opt_service ?
+        opt_service : determine_service(req)
+    var cas_uri =
+       cas_host+validation_service +&#39;?&#39;
+       +querystring.stringify({&#39;service&#39;:service,
+                               &#39;ticket&#39;:ticket});
+    request({uri:cas_uri}, callback);
+    return null;
+});</code></pre>
+</section>
+<section class="slide level1" id="define-the-request-callback">
+<h1>Define the request callback</h1>
+<ul class="incremental">
+<li>current version uses a regular expression</li>
+<li>development version actually parses the XML</li>
+<li>callback is a defined in ticket_check, can see <code>ticket</code> and <code>next</code></li>
+<li>Redis: use Redis to link CAS session ticket and local session</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>function callback(err, resp, body) {
+    if (!err &amp;&amp; resp.statusCode === 200) {
+        if(/cas:authenticationSuccess/.exec(body)){
+            if(/&lt;cas:user&gt;(\w+)&lt;\/cas:user&gt;/.exec(body)){
+                req.session.name = RegExp.$1;
+            }
+            req.session.st = ticket;
+            redclient.set(ticket,req.sessionID);
+            return next();
+        }else{  next(new Error(&#39;authentication failed&#39;)); }
+    }else{ next(new Error(&#39;authentication failed&#39;)); }
+}</code></pre>
+</section>
+<section class="slide level1" id="thats-it">
+<h1>That's it</h1>
+<ul class="incremental">
+<li>We redirected to CAS</li>
+<li>consumed the service ticket</li>
+<li>verified the service ticket</li>
+<li>established a session</li>
+<li>stored the session in Redis with the ticket as the key</li>
+</ul>
+</section>
+<section class="slide level1" id="example-server">
+<h1>Example server</h1>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>var app = express()
+.use(express.cookieParser(&#39;barley Waterloo Napoleon&#39;))
+.use(express.session({ store: new RedisStore }))
+.use(cas_validate.ticket({&#39;cas_host&#39;:cas_host}))
+.use(cas_validate.check_or_redirect({&#39;cas_host&#39;:cas_host}))
+.use(function(req, res, next){
+         res.end(&#39;hello world&#39;)
+         return null
+     });
+var server =app.listen(testport,testhost,done)</code></pre>
+</section>
+<section class="slide level1" id="single-sign-off">
+<h1>Single Sign Off</h1>
+<ul class="incremental">
+<li>very easy</li>
+<li>listen for a <code>POST</code> from the CAS server</li>
+<li>invalidate the session</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>function ssoff(req,res,next){
+   var method = req.method.toLowerCase();
+   if (method == &#39;post&#39;){
+       return invalidate(req,res,next);
+   }
+   return next()
+}</code></pre>
+</section>
+<section class="slide level1">
+
+<pre class="language-javascript"><code>function invalidate(req,res,next){
+      var st = get_session_ticket(req)
+      redclient.get(st,function(err,sid){
+          req.sessionStore.destroy(sid
+          ,function(err){
+              redclient.del(st);
+              return null
+          }});
+      res.end();
+      return null;
+  }
+}</code></pre>
+</section>
+<section class="slide level1" id="demo-1">
+<h1>Demo 1</h1>
+<p>Sign on</p>
+</section>
+<section class="slide level1" id="demo-2">
+<h1>Demo 2</h1>
+<p>Sign off</p>
+</section>
+<section class="slide level1" id="ctmlabs-banner">
+<h1>CTMLabs banner</h1>
+<ul class="incremental">
+<li>Using this library to create a dynamic banner for our sites</li>
+<li>Researchers need only write</li>
+</ul>
+<pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;script</span><span class="ot"> src=</span><span class="st">&#39;http://menu.ctmlabs.net/menu.js?resetgateway=true</span><span class="er">&amp;</span><span class="st">service=http%3a%2f%2fara.ctmlabs.net%2findex.html&#39;</span><span class="kw">&gt;&lt;/script&gt;</span></code></pre>
+<p><a href="http://ara.ctmlabs.net">http://ara.ctmlabs.net</a></p>
+</section>
+<section class="slide level1" id="thank-you">
+<h1>Thank you</h1>
+<p>Questions? Comments? Rotten tomatoes?</p>
+</section>
+<section class="slide level1" id="gripe">
+<h1>Gripe</h1>
+<p>Is user agent parsing still horribly broken in default CAS server?</p>
+</section>
+
+        <script src="js/d3.v3.min.js"></script>
+        <script src="js/stack.v0.min.js"></script>
+        <script src="js/prism-min.js"></script>
+
+    </body>
+</html>
