@@ -34,7 +34,8 @@ function _setup_request(cb){
     // clear the cookies for the next test
     jar = request.jar()
     var rq = request.defaults( {jar:jar
-                                ,headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}})
+//                                ,headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}
+                               })
     cb(null,rq)
 }
 
