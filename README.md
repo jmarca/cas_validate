@@ -471,6 +471,21 @@ it as noted above.  The only caveat is that waiting for the POST is
 slow, and so the test may timeout.  If this happens, try running with
 a longer timeout period (`mocha --timeout 50000 test`)
 
+
+## Testing XML validation functionality
+
+By default now, if your CAS server returns user attributes as XML,
+then these attributes will be parsed and loaded into the environment.
+
+The test (test/xml_parser.js) )is designed explicitly for my case,
+where I am passing back `['mail','sn','cn','givenName','groups']` from
+ldap via CAS.  If your local CAS server is not passing back these
+things, then the test will fail for you.  To help, I am dumping to the
+console the object returned from parsing.  If it makes sense to you
+given your CAS server and given your test user (CAS_USER environment
+variable), then the test is passing.  Feel free to fork and create a
+more general test if you can think of one.
+
 # Logging
 
 This package uses [winston](https://github.com/flatiron/winston).  Not
@@ -480,12 +495,14 @@ running in production, set `NODE_ENV` to 'production'.  This also
 meshes well with Express usage of the `NODE_ENV` variable.  Finally,
 if something weird is going on in production, you can also set the log
 level explicitly, by setting either `CAS_VALIDATE_LOG_LEVEL` or
-`LOGLEVEL` to the usual ['debug','info','warn','error'] (although this 
+`LOGLEVEL` to the usual ['debug','info','warn','error'] (although this
 hasn't been tested)
 
-In the code noisy alerts are at the debug level, and then errors are 
-at the error level, but maybe in the future I'll add finer grained 
+In the code noisy alerts are at the debug level, and then errors are
+at the error level, but maybe in the future I'll add finer grained
 message levels.
+
+
 
 
 # See Also
