@@ -653,7 +653,15 @@ describe('cas_validate.username',function(){
                   .use(connect.cookieParser('barley Waterloo Napoleon Mareschal Foch'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/username',cas_validate.username)
+            app.use('/username',function(req,res,next){
+                cas_validate.get_username(req,function(err,obj){
+
+                    res.setHeader('Content-Type','application/json');
+                    res.end(JSON.stringify(obj))
+                    return null
+                })
+            })
+
 
             app.use(cas_validate.ticket({'cas_host':chost
                                         ,'service':'http://'+testhost +':'+testport+'/'}))
@@ -682,7 +690,7 @@ describe('cas_validate.username',function(){
                                ,function(e,r,b){
                                     r.statusCode.should.equal(200)
                                     should.exist(b)
-                                    JSON.parse(b).should.have.property('user',null)
+                                    JSON.parse(b).should.not.have.property('user')
                                     cb()
                                 }
                                )
@@ -717,7 +725,7 @@ describe('cas_validate.username',function(){
                                            r.statusCode.should.equal(200)
                                            should.exist(b)
                                            var u = JSON.parse(b)
-                                           u.should.have.property('user',cuser)
+                                           u.should.have.property('user_name',cuser)
                                            cb()
                                        }
                                       )
@@ -834,7 +842,14 @@ describe('cas_validate.ssoff',function(){
                   .use(connect.cookieParser('barley Waterloo Napoleon Mareschal Foch'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/username',cas_validate.username)
+            app.use('/username',function(req,res,next){
+                cas_validate.get_username(req,function(err,obj){
+
+                    res.setHeader('Content-Type','application/json');
+                    res.end(JSON.stringify(obj))
+                    return null
+                })
+            })
 
             // note that ssoff has to go first, because otherwise the
             // CAS server itself doesn't have a valid session!
@@ -884,7 +899,7 @@ describe('cas_validate.ssoff',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',cuser)
+                                    u.should.have.property('user_name',cuser)
                                     cb(e,rq)
                                 })
                          }
@@ -923,7 +938,14 @@ describe('cas_validate.logout',function(){
                   .use(connect.cookieParser('barley Waterloo Napoleon loser'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/username',cas_validate.username)
+            app.use('/username',function(req,res,next){
+                cas_validate.get_username(req,function(err,obj){
+
+                    res.setHeader('Content-Type','application/json');
+                    res.end(JSON.stringify(obj))
+                    return null
+                })
+            })
             app.use('/quit',cas_validate.logout({'service':'http://'+testhost+':'+testport}))
             app.use(cas_validate.ssoff())
             app.use(cas_validate.ticket({'cas_host':chost
@@ -976,7 +998,7 @@ describe('cas_validate.logout',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',cuser)
+                                    u.should.have.property('user_name',cuser)
                                     cb(e,rq)
                                 })
                          }
