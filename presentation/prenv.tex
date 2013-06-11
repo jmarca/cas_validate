@@ -1,0 +1,66 @@
+\startenvironment prenv
+% for US paper; the sensible default is [A4][A4] (A4 typesetting,
+% printed on A4 paper)
+\setuppapersize[letter][letter]
+\setuplayout[topspace=0.5in, backspace=1in, header=24pt, footer=36pt,
+  height=middle, width=middle]
+
+
+% where are the figures
+\setupexternalfigures[directory={./figs/,./images/}]
+
+% which figures are being used
+
+\useexternalfigure[lanark][lanark.png][width=0.9\textwidth]
+
+\usetypescript[termes]
+\setupbodyfont[termes,10pt]
+
+\setuppagenumbering[location={footer,center}]
+
+\setuphead[section,subsection][number=no,style={\ss\bfa}]
+\setuphead[subsubsection][number=no,style={\ss\bf}]
+
+\setupheadtext[section=Section]
+
+\setupreferencing[sectionnumber=no]
+
+
+% set inter-paragraph spacing
+\setupwhitespace[small]
+% comment the next line to not indent paragraphs
+\setupindenting[medium, yes]
+
+% syntax highlighting
+\usemodule[vim]
+
+\definevimtyping [SQL][syntax=sql,
+  before={\tfx},
+  after={},
+  margin=0.5cm]
+
+
+% default captions on top, for figures remember to push it to the
+% bottom and then reset
+\setupcaptions[minwidth=\textwidth, align=middle, location=bottom]
+
+% Tables and Lists
+\setupTABLE[frame=off, split=yes, offset=1cm,leftmargindistance=2cm,rightmargindistance=2cm]
+\setuptabulate[indentnext=no, align=right]
+\setupitemgroup[itemize][packed][indentnext=no,symbol=1,n=1]
+
+
+%%\setuptables[bodyfont=9pt]
+
+%% how to translate markdown in this doc
+\usemodule[filter]
+
+\defineexternalfilter
+    [markdown]
+    [filtercommand={pandoc -t context -i  \externalfilterinputfile\space -o \externalfilteroutputfile},
+      directory=output]
+
+% clickable pdf
+\setupinteraction[state=start,color=blue,contrastcolor=,style=normal]
+
+\stopenvironment

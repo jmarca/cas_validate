@@ -34,7 +34,8 @@ function _setup_request(cb){
     // clear the cookies for the next test
     jar = request.jar()
     var rq = request.defaults( {jar:jar
-                                ,headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}})
+//                                ,headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}
+                               })
     cb(null,rq)
 }
 
@@ -188,7 +189,9 @@ describe('cas_validate.check_and_return',function(){
             app = connect()
                   .use(connect.cookieParser('barley Waterloo Napoleon'))
                   .use(connect.session({ store: new RedisStore }))
-            app.use(cas_validate.ticket({'cas_host':chost}))
+            app.use('/valid'
+                   ,cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/valid'}))
             app.use('/valid'
                    ,function(req, res, next){
                         if(req.session && req.session.st){
@@ -279,8 +282,10 @@ describe('cas_validate.check_or_redirect and cas_validate.ticket',function(){
             app = connect()
                   .use(connect.cookieParser('barley Waterloo Napoleon'))
                   .use(connect.session({ store: new RedisStore }))
-                  .use(cas_validate.ticket({'cas_host':chost}))
-                  .use(cas_validate.check_or_redirect({'cas_host':chost})
+                  .use(cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
+                  .use(cas_validate.check_or_redirect({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'})
                       )
                   .use(function(req, res, next){
                       res.end('hello world')
@@ -311,6 +316,27 @@ describe('cas_validate.check_or_redirect and cas_validate.ticket',function(){
                        ,done
                        )
 
+
+    })
+
+    it('should not be a baby when somebody spoofs a bad ticket',function(done){
+
+        async.waterfall([function(cb){
+                             _setup_request(cb)
+                         }
+                        ,function(rq,cb){
+                             rq({url:'http://'+ testhost +':'+testport+'/?ticket=diediedie'}
+                               ,function(e,r,b){
+                                    r.statusCode.should.equal(200)
+                                    should.exist(b)
+                                    b.should.match(/Central Authentication Service/)
+                                    cb()
+                                }
+                               )
+
+                         }]
+                       ,done
+                       )
 
     })
 
@@ -353,7 +379,8 @@ describe('cas_validate.redirect and cas_validate.ticket take two',function(){
         function(done){
             app = connect()
             app.use(cas_validate.ssoff())
-            app.use(cas_validate.ticket({'cas_host':chost}))
+            app.use(cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
             app.use(cas_validate.check_and_return({'cas_host':chost
                                                   ,'service':'http://'+testhost+':'+testport+'/'}))
             app.use(function(req, res, next){
@@ -486,8 +513,10 @@ describe('stacking multiple cas_validate.ticket handlers',function(){
         function(done){
             app = connect()
             app.use(cas_validate.ssoff())
-            app.use(cas_validate.ticket({'cas_host':chost}))
-            app.use(cas_validate.ticket({'cas_host':chost}))
+            app.use(cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
+            app.use(cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
             app.use(cas_validate.check_and_return({'cas_host':chost
                                                   ,'service':'http://'+testhost+':'+testport+'/'}))
             app.use(function(req, res, next){
@@ -626,8 +655,10 @@ describe('cas_validate.username',function(){
 
             app.use('/username',cas_validate.username)
 
-            app.use(cas_validate.ticket({'cas_host':chost}))
-            app.use(cas_validate.check_or_redirect({'cas_host':chost}))
+            app.use(cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
+            app.use(cas_validate.check_or_redirect({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
 
             app.use('/',function(req, res, next){
                       res.end('hello world')
@@ -722,8 +753,10 @@ describe('cas_validate.session_or_abort',function(){
                         res.end('public secrets')
                     })
 
-            app.use(cas_validate.ticket({'cas_host':chost}))
-            app.use(cas_validate.check_or_redirect({'cas_host':chost}))
+            app.use(cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
+            app.use(cas_validate.check_or_redirect({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/'}))
 
             app.use('/',function(req, res, next){
                       res.end('hello world')
@@ -891,7 +924,7 @@ describe('cas_validate.logout',function(){
                   .use(connect.session({ store: new RedisStore }))
 
             app.use('/username',cas_validate.username)
-            app.use('/quit',cas_validate.logout({}))
+            app.use('/quit',cas_validate.logout({'service':'http://'+testhost+':'+testport}))
             app.use(cas_validate.ssoff())
             app.use(cas_validate.ticket({'cas_host':chost
                                          ,'service':'http://'+testhost+':'+testport}))
