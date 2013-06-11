@@ -19,6 +19,44 @@ still had routing capabilities, but all but one feature still works
 with the latest Connect, and all features work with Express.
 
 
+# Version 0.1.0
+
+This new version brings with it some small API changes for the few
+people who might be using this.  The major difference is that it is
+no longer optional to pass the service location.  That is, the
+routines do not try to guess what the service might be from the
+request header.  This is because at the Open Apereo 2013 conference,
+it was pointed out during a security audit that doing do is a possible
+security flaw.
+
+So invoke the various functions as so:
+
+```javascript
+app.use('/valid'
+       ,cas_validate.ticket({'cas_host':my_cas_host,
+                             'service':'http://'+testhost +':'+testport+'/valid'}))
+```
+
+The other major change in functionality is that the ticket response
+from the CAS server is now parsed for attributes.  Unfortunately, this
+currently requires an XML response from the CAS server.  I will
+implement the JSON response handler soon, but in the interim you might
+want to check out the
+[Sheffield University fork](https://github.com/SheffieldUni/cas_validate)
+
+# Roadmap
+
+I am in the midst of refactoring and modularizing this library.  The
+most pressing need is to parse a  JSON response  from the CAS server.
+Next comes centralizing the initialization of this library.  For the
+moment, the best approach is to create an object in your calling code
+that holds the common CAS initialization attributes.
+
+Version 0.2.0 will be hit when JSON responses are possible, and
+version 0.3.0 will be hit when all of the various routines are
+modularized (so you don't have to delete the SSOFF code, for example,
+you just don't have to use it)
+
 
 # Example use for a Connect-based server:
 
