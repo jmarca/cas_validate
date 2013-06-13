@@ -46,7 +46,6 @@ function _setup_request(cb){
 function _login_handler(rq,callback){
     return function(e,r,b){
         // parse the body for the form url, with the correct jsessionid
-        //console.log(b)
         var form_regex = /id="fm1".*action="(.*)" method="post"/;
         var result = form_regex.exec(b)
         var opts={}
@@ -83,8 +82,6 @@ function cas_login_function(rq,callback){
                                    if(success_regex.test(b)){
                                        return callback()
                                    }else{
-                                       console.log(opts)
-                                       console.log(b)
                                        return callback('CAS login failed')
                                    }
                                }) )
