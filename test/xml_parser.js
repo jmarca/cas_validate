@@ -35,6 +35,7 @@ function _setup_request(cb){
     jar = request.jar()
     var rq = request.defaults( {jar:jar
 //                                ,headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}
+
                                })
     cb(null,rq)
 }
@@ -108,14 +109,25 @@ describe('cas_validate get user attributes via XML',function(){
                   .use(connect.cookieParser('barley Waterloo Napoleon Mareschal Foch'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/attributes',function(req,res,next){
-                if(req.session && req.session.attributes){
-                    res.setHeader('Content-Type','application/json');
-                    res.end(JSON.stringify(req.session.attributes))
-                }else{
-                    res.end(JSON.stringify({}))
-                }
-            })
+            app.use('/attributes'
+                   ,cas_validate.ticket({'cas_host':chost
+                                        ,'service':'http://'+testhost +':'+testport+'/attributes'}))
+            app.use('/attributes'
+                   ,cas_validate.check_and_return({'cas_host':chost
+                                                  ,'service':'http://'+testhost +':'+testport+'/attributes'}))
+            app.use('/attributes'
+                   ,function(req,res,next){
+                        cas_validate.get_attributes(req,function(err,obj){
+                            if(err){
+                                res.end(JSON.stringify({}))
+                                return null
+                            }
+                            res.setHeader('Content-Type','application/json');
+                            res.end(JSON.stringify(obj))
+                            return null
+                        })
+                        return null
+                    })
 
             app.use(cas_validate.ticket({'cas_host':chost
                                         ,'service':'http://'+testhost +':'+testport+'/'}))
@@ -125,6 +137,7 @@ describe('cas_validate get user attributes via XML',function(){
             app.use('/',function(req, res, next){
                       res.end('hello world')
                   });
+
             server = app.listen(testport
                                                   ,done)
         })
@@ -144,6 +157,7 @@ describe('cas_validate get user attributes via XML',function(){
                                ,function(e,r,b){
                                     r.statusCode.should.equal(200)
                                     should.exist(b)
+                                    console.log(b)
                                     JSON.parse(b).should.eql({})
                                     cb()
                                 }
@@ -177,14 +191,71 @@ describe('cas_validate get user attributes via XML',function(){
                                     rq({url:'http://'+ testhost +':'+testport+'/attributes'}
                                       ,function(e,r,b){
                                            r.statusCode.should.equal(200)
+
                                            should.exist(b)
                                            var u = JSON.parse(b)
                                            console.log(u)
-                                           _.each(['mail','sn','cn','givenName','groups'],
+                                           _.each(['mail','sn','cn','givenName','groups','user_name'],
                                                   function(param){
                                                       u.should.have.property(param)
                                                   });
                                            cb()
+                                       }
+                                      )
+                                })
+
+                         }]
+                       ,done
+                       )
+
+    })
+
+    it('should not build an infinite username on repeated gateway calls',function(done){
+
+        var username
+        async.waterfall([function(cb){
+                             _setup_request(cb)
+                         }
+                        ,function(rq,cb){
+
+                             // set up a session with CAS server
+                             cas_login_function(rq
+                                               ,function(e){
+                                                    return cb(e,rq)
+                                                })
+                         }
+                        ,function(rq,cb){
+                             rq('http://'+ testhost +':'+testport+'/'
+                               ,function(e,r,b){
+
+                                    b.should.equal('hello world');
+                                    // session established, now we can get attributes
+                                    rq({url:'http://'+ testhost +':'+testport+'/attributes'}
+                                      ,function(e,r,b){
+                                           r.statusCode.should.equal(200)
+                                           should.exist(b)
+                                           var u = JSON.parse(b)
+                                           console.log(u)
+                                           username = u.user_name
+                                           cb(null,rq)
+                                       }
+                                      )
+                                })
+
+                         }
+                        ,function(rq,cb){
+                             rq('http://'+ testhost +':'+testport+'/'
+                               ,function(e,r,b){
+                                    b.should.equal('hello world');
+                                    // session established, now we can get attributes
+                                    rq({url:'http://'+ testhost +':'+testport+'/attributes'}
+                                      ,function(e,r,b){
+                                           r.statusCode.should.equal(200)
+                                           should.exist(b)
+                                           var u = JSON.parse(b)
+                                           console.log(u)
+                                           u.user_name.should.eql(username)
+                                           cb(null)
                                        }
                                       )
                                 })
