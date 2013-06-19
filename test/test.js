@@ -27,6 +27,7 @@ var express = require('express')
 var connect = require('connect')
 var RedisStore = require('connect-redis')(connect);
 
+process.env.CAS_SESSION_TTL=2
 var cas_validate = require('../lib/cas_validate')
 
 var jar;
@@ -968,8 +969,7 @@ describe('cas_validate.logout',function(){
                                ,function(e){
                                     if(e) return done(e)
                                     // baseline keys to make sure we're not leaking
-                                    redclient.dbsize(function(e,r){
-                                        console.log(r)
+                                    redclient.keys('ST*',function(e,r){
                                         keys=r
                                         return done()
                                     })
@@ -978,8 +978,7 @@ describe('cas_validate.logout',function(){
             return null
         })
     after(function(done){
-        redclient.dbsize(function(e,r){
-            console.log(r)
+        redclient.keys('ST*',function(e,r){
             keys.should.eql(r)
             return server.close(done)
         })

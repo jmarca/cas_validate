@@ -26,6 +26,7 @@ var express = require('express')
 var connect = require('connect')
 var RedisStore = require('connect-redis')(connect);
 
+process.env.CAS_SESSION_TTL=2
 var cas_validate = require('../lib/cas_validate')
 
 var jar;
