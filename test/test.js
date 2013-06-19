@@ -914,7 +914,7 @@ describe('cas_validate.ssoff',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',null)
+                                    u.should.eql({})
                                     cb(e)
                                 })
                          }]
@@ -924,18 +924,15 @@ describe('cas_validate.ssoff',function(){
     })
 
 })
-
-
 describe('cas_validate.logout',function(){
 
 
     var app,server,keys;
-
     before(
 
         function(done){
             app = connect()
-                .use(connect.bodyParser())
+                  .use(connect.bodyParser())
                   .use(connect.cookieParser('barley Waterloo Napoleon loser'))
                   .use(connect.session({ store: new RedisStore }))
 
