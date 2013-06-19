@@ -4,6 +4,7 @@ var http = require('http');
 var request = require('request');
 var querystring = require('querystring');
 var redis = require("redis");
+var redclient = redis.createClient();
 
 var env = process.env;
 var chost = env.CAS_HOST;
@@ -928,7 +929,7 @@ describe('cas_validate.ssoff',function(){
 describe('cas_validate.logout',function(){
 
 
-    var app,server;
+    var app,server,keys;
 
     before(
 
@@ -967,10 +968,25 @@ describe('cas_validate.logout',function(){
                                                               ,'service':'http://'+testhost+':'+testport+'/'}))
             login.use('/',app)
             server=login.listen(testport
-                               ,done)
+                               ,function(e){
+                                    if(e) return done(e)
+                                    // baseline keys to make sure we're not leaking
+                                    redclient.dbsize(function(e,r){
+                                        console.log(r)
+                                        keys=r
+                                        return done()
+                                    })
+                                    return null
+                                })
+            return null
         })
     after(function(done){
-        server.close(done)
+        redclient.dbsize(function(e,r){
+            console.log(r)
+            keys.should.eql(r)
+            return server.close(done)
+        })
+        return null
     })
 
     it('should delete the session when the user signs out locally',function(done){
