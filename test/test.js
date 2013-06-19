@@ -4,6 +4,7 @@ var http = require('http');
 var request = require('request');
 var querystring = require('querystring');
 var redis = require("redis");
+var redclient = redis.createClient();
 
 var env = process.env;
 var chost = env.CAS_HOST;
@@ -26,6 +27,7 @@ var express = require('express')
 var connect = require('connect')
 var RedisStore = require('connect-redis')(connect);
 
+process.env.CAS_SESSION_TTL=2
 var cas_validate = require('../lib/cas_validate')
 
 var jar;
@@ -913,7 +915,7 @@ describe('cas_validate.ssoff',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',null)
+                                    u.should.eql({})
                                     cb(e)
                                 })
                          }]
@@ -923,18 +925,15 @@ describe('cas_validate.ssoff',function(){
     })
 
 })
-
-
 describe('cas_validate.logout',function(){
 
 
-    var app,server;
-
+    var app,server,keys;
     before(
 
         function(done){
             app = connect()
-                .use(connect.bodyParser())
+                  .use(connect.bodyParser())
                   .use(connect.cookieParser('barley Waterloo Napoleon loser'))
                   .use(connect.session({ store: new RedisStore }))
 
@@ -967,10 +966,23 @@ describe('cas_validate.logout',function(){
                                                               ,'service':'http://'+testhost+':'+testport+'/'}))
             login.use('/',app)
             server=login.listen(testport
-                               ,done)
+                               ,function(e){
+                                    if(e) return done(e)
+                                    // baseline keys to make sure we're not leaking
+                                    redclient.keys('ST*',function(e,r){
+                                        keys=r
+                                        return done()
+                                    })
+                                    return null
+                                })
+            return null
         })
     after(function(done){
-        server.close(done)
+        redclient.keys('ST*',function(e,r){
+            keys.should.eql(r)
+            return server.close(done)
+        })
+        return null
     })
 
     it('should delete the session when the user signs out locally',function(done){
