@@ -4,6 +4,7 @@ var http = require('http');
 var request = require('request');
 var querystring = require('querystring');
 var redis = require("redis");
+var redclient = redis.createClient();
 
 var env = process.env;
 var chost = env.CAS_HOST;
@@ -26,6 +27,7 @@ var express = require('express')
 var connect = require('connect')
 var RedisStore = require('connect-redis')(connect);
 
+process.env.CAS_SESSION_TTL=2
 var cas_validate = require('../lib/cas_validate')
 
 var jar;
@@ -653,7 +655,15 @@ describe('cas_validate.username',function(){
                   .use(connect.cookieParser('barley Waterloo Napoleon Mareschal Foch'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/username',cas_validate.username)
+            app.use('/username',function(req,res,next){
+                cas_validate.get_username(req,function(err,obj){
+
+                    res.setHeader('Content-Type','application/json');
+                    res.end(JSON.stringify(obj))
+                    return null
+                })
+            })
+
 
             app.use(cas_validate.ticket({'cas_host':chost
                                         ,'service':'http://'+testhost +':'+testport+'/'}))
@@ -682,7 +692,7 @@ describe('cas_validate.username',function(){
                                ,function(e,r,b){
                                     r.statusCode.should.equal(200)
                                     should.exist(b)
-                                    JSON.parse(b).should.have.property('user',null)
+                                    JSON.parse(b).should.not.have.property('user')
                                     cb()
                                 }
                                )
@@ -717,7 +727,7 @@ describe('cas_validate.username',function(){
                                            r.statusCode.should.equal(200)
                                            should.exist(b)
                                            var u = JSON.parse(b)
-                                           u.should.have.property('user',cuser)
+                                           u.should.have.property('user_name',cuser)
                                            cb()
                                        }
                                       )
@@ -834,7 +844,14 @@ describe('cas_validate.ssoff',function(){
                   .use(connect.cookieParser('barley Waterloo Napoleon Mareschal Foch'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/username',cas_validate.username)
+            app.use('/username',function(req,res,next){
+                cas_validate.get_username(req,function(err,obj){
+
+                    res.setHeader('Content-Type','application/json');
+                    res.end(JSON.stringify(obj))
+                    return null
+                })
+            })
 
             // note that ssoff has to go first, because otherwise the
             // CAS server itself doesn't have a valid session!
@@ -884,7 +901,7 @@ describe('cas_validate.ssoff',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',cuser)
+                                    u.should.have.property('user_name',cuser)
                                     cb(e,rq)
                                 })
                          }
@@ -898,7 +915,7 @@ describe('cas_validate.ssoff',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',null)
+                                    u.should.eql({})
                                     cb(e)
                                 })
                          }]
@@ -908,22 +925,26 @@ describe('cas_validate.ssoff',function(){
     })
 
 })
-
-
 describe('cas_validate.logout',function(){
 
 
-    var app,server;
-
+    var app,server,keys;
     before(
 
         function(done){
             app = connect()
-                .use(connect.bodyParser())
+                  .use(connect.bodyParser())
                   .use(connect.cookieParser('barley Waterloo Napoleon loser'))
                   .use(connect.session({ store: new RedisStore }))
 
-            app.use('/username',cas_validate.username)
+            app.use('/username',function(req,res,next){
+                cas_validate.get_username(req,function(err,obj){
+
+                    res.setHeader('Content-Type','application/json');
+                    res.end(JSON.stringify(obj))
+                    return null
+                })
+            })
             app.use('/quit',cas_validate.logout({'service':'http://'+testhost+':'+testport}))
             app.use(cas_validate.ssoff())
             app.use(cas_validate.ticket({'cas_host':chost
@@ -945,10 +966,23 @@ describe('cas_validate.logout',function(){
                                                               ,'service':'http://'+testhost+':'+testport+'/'}))
             login.use('/',app)
             server=login.listen(testport
-                               ,done)
+                               ,function(e){
+                                    if(e) return done(e)
+                                    // baseline keys to make sure we're not leaking
+                                    redclient.keys('ST*',function(e,r){
+                                        keys=r
+                                        return done()
+                                    })
+                                    return null
+                                })
+            return null
         })
     after(function(done){
-        server.close(done)
+        redclient.keys('ST*',function(e,r){
+            keys.should.eql(r)
+            return server.close(done)
+        })
+        return null
     })
 
     it('should delete the session when the user signs out locally',function(done){
@@ -976,7 +1010,7 @@ describe('cas_validate.logout',function(){
                              rq({url:'http://'+ testhost +':'+testport+'/username'}
                                ,function(e,r,b){
                                     var u = JSON.parse(b)
-                                    u.should.have.property('user',cuser)
+                                    u.should.have.property('user_name',cuser)
                                     cb(e,rq)
                                 })
                          }
