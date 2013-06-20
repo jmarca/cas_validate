@@ -50,4 +50,15 @@ describe('ticket',function(){
                     done()
                 })
     })
+    it('should rebuff a mal-formed ticket',function(done){
+        request({url:'http://'+ testhost +':'+testport+'/?ticket=%22ST-1234561234567abcabc%22'
+                ,followRedirect:false
+                }
+               ,function(e,r,b){
+                    r.statusCode.should.equal(307)
+                    r.headers.location.should.equal(casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+testport+'%2F')
+                    should.not.exist(b)
+                    done()
+                })
+    })
 })
