@@ -19,6 +19,14 @@ still had routing capabilities, but all but one feature still works
 with the latest Connect, and all features work with Express.
 
 
+# Redis version 2.6
+
+This library now requires redis version 2.6.x.  I recently added
+time-to-live capabilities when storing the session ticket data (using
+the redis setex command as suggested by @chrisbarran).  The test for
+this functionality (test/ttl_test.js) fails when running Redis 2.4,
+but passes when running Redis 2.6.
+
 # Version 0.1.0
 
 This new version brings with it some small API changes for the few
