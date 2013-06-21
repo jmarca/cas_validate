@@ -195,8 +195,11 @@ describe('cas_validate get user attributes via XML',function(){
 
                                            should.exist(b)
                                            var u = JSON.parse(b)
-                                           console.log(u)
-                                           _.each(['mail','sn','cn','givenName','groups','user_name'],
+                                           // remove groups, as the test user may not have it
+                                           //
+                                           // actually most of these are dependent upon our
+                                           // particular ldap setup
+                                           _.each(['mail','sn','cn','givenName','user_name'],
                                                   function(param){
                                                       u.should.have.property(param)
                                                   });
