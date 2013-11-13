@@ -341,6 +341,9 @@ app.
   incoming request, but one may want to redirect the incoming request
   somewhere else.
 
+* `logout_service`: the default CAS logout service is `/cas/logout`.
+  If your CAS setup uses a different endpoint, then specify that here.
+
 
 ### Example
 
