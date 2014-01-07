@@ -34,7 +34,7 @@ people who might be using this.  The major difference is that it is
 no longer optional to pass the service location.  That is, the
 routines do not try to guess what the service might be from the
 request header.  This is because at the Open Apereo 2013 conference,
-it was pointed out during a security audit that doing do is a possible
+it was pointed out during a security audit that doing so is a possible
 security flaw.
 
 So invoke the various functions as so:
@@ -91,7 +91,7 @@ var server = app.listen(3000,function(e){
 );
 ```
 
-A few thing to note.  First I am using the connect-redis plugin to
+A few things to note.  First I am using the connect-redis plugin to
 manage sessions from CAS.  I haven't tested whether other session
 management plugins will work, but as long as they allow simple
 operations such as
@@ -526,7 +526,7 @@ a longer timeout period (`mocha --timeout 50000 test`)
 By default now, if your CAS server returns user attributes as XML,
 then these attributes will be parsed and loaded into the environment.
 
-The test (test/xml_parser.js) )is designed explicitly for my case,
+The test (test/xml_parser.js) is designed explicitly for my case,
 where I am passing back `['mail','sn','cn','givenName','groups']` from
 ldap via CAS.  If your local CAS server is not passing back these
 things, then the test will fail for you.  To help, I am dumping to the
