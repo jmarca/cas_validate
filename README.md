@@ -27,6 +27,27 @@ the redis setex command as suggested by @chrisbarran).  The test for
 this functionality (test/ttl_test.js) fails when running Redis 2.4,
 but passes when running Redis 2.6.
 
+# Version 0.1.8
+
+Biggest change here is a switch from SAX parser to XML doc parser for
+parsing the response from the CAS server ticket validation.  It was
+reported that the parser was choking on attributes with umlauts and
+other common utf-8 characters.  Apparently, either the SAX parser
+approach in libxmljs or the way I was using it was to blame, but the
+upshot was that non-ascii characters were getting mangled.
+
+To fix this, I switched to using the whole-doc parsing approach.  This
+will use slightly more memory, etc, as the whole DOM tree for the
+response has to be loaded into memory, but the docs are small so that
+is probably fine.
+
+The test that checks this is in `test/xml_parser_test.js`  It does not
+use a live CAS server, so you can run it on your own and load it up
+with your own CAS response docs to see whether everything is getting
+parsed okay.  Just replace the file in `test/files/cas_auth.xml` with
+your own difficult-to-parse case, and then submit a bug report is
+stuff is breaking.
+
 # Version 0.1.0
 
 This new version brings with it some small API changes for the few
@@ -526,7 +547,14 @@ a longer timeout period (`mocha --timeout 50000 test`)
 By default now, if your CAS server returns user attributes as XML,
 then these attributes will be parsed and loaded into the environment.
 
-The test (test/xml_parser.js) is designed explicitly for my case,
+As noted above, the XML parser was switched away from a SAX-style
+parser to a whole document parser, in order to get around a character
+encoding bug.  This change has an accompanying test in
+`test/xml_parser_test.js`, and reads in the two files found in
+`test/files/`, so if you want to test out your own specific case prior
+to deploying this library, swap in your own XML files there.
+
+The test (`test/parse_casxml_response.js`) is designed explicitly for my case,
 where I am passing back `['mail','sn','cn','givenName','groups']` from
 ldap via CAS.  If your local CAS server is not passing back these
 things, then the test will fail for you.  To help, I am dumping to the
@@ -534,6 +562,8 @@ console the object returned from parsing.  If it makes sense to you
 given your CAS server and given your test user (CAS_USER environment
 variable), then the test is passing.  Feel free to fork and create a
 more general test if you can think of one.
+
+
 
 # Logging
 
