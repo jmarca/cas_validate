@@ -34,7 +34,7 @@ A minor update to parse attributes in a second way.  According to user
 attributes to the CAS client is to simply list them.  That is, the way
 I am parsing by default is
 
-``` xml
+```xml
 <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
 	<cas:authenticationSuccess>
 		<cas:user>h_mueller</cas:user>
@@ -53,7 +53,7 @@ I am parsing by default is
 
 but there is an alternate way that simply lists the attributes as so:
 
-``` xml
+```xml
 <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
   <cas:authenticationSuccess>
     <cas:user>bob</cas:user>
@@ -71,6 +71,8 @@ but there is an alternate way that simply lists the attributes as so:
 ```
 Version 0.1.9 should now properly parse the second way as well,
 whereas before it would simply choke and die.
+
+Check out the test in
 
 This email thread is one that I found when trying to dig up the
 "standard" way to send user attributes:
