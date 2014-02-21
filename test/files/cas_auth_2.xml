@@ -1,0 +1,14 @@
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+  <cas:authenticationSuccess>
+    <cas:user>bob</cas:user>
+    <cas:attribute name="uid" value="b01234" />
+    <cas:attribute name="mail" value="bob@mail.com" />
+    <cas:attribute name="cn" value="smith" />
+    <cas:attribute name="givenname" value="bob" />
+    <cas:attribute name="service" value="other" />
+    <cas:attribute name="permission" value="p1" />
+    <cas:attribute name="permission" value="p2" />
+    <cas:attribute name="permission" value="p3" />
+    <cas:attribute name="uidnumber" value="123456789" />
+  </cas:authenticationSuccess>
+</cas:serviceResponse>

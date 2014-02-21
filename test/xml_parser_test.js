@@ -117,3 +117,59 @@ describe('handle a failed session login',function(){
            return null
        })
 })
+
+// the other xml file from github
+describe('get a user doc, parse it',function(){
+    it('should parse the alternate attribute serving method just fine'
+      ,function(done){
+           var port = testport+3
+           var srvr = express().use(express.logger())
+           srvr.use(express.errorHandler({ dumpExceptions: true, showStack: true }))
+           .use(express.cookieParser('barley wheat napoleon'))
+           .use(express.session({ store: new RedisStore }))
+           srvr.get('/test', function(req, res){
+               // short circuit a real request cycle
+               req.session.ticket='testingticket'
+
+               var parser = parser_maker.make_xml_parser(req,res,function(e){
+                                req.session.name.should.eql('bob')
+                                var attrs = req.session.attributes
+                                attrs.should.have.keys(['mail'
+                                                       ,'uid'
+                                                       ,'cn'
+                                                       ,'givenname'
+                                                       ,'service'
+                                                       ,'permission'
+                                                       ,'uidnumber'
+                                                       ])
+
+                                attrs['mail'      ].should.equal('bob@mail.com')
+                                attrs['uid'       ].should.equal('b01234')
+                                attrs['cn'        ].should.equal('smith')
+                                attrs['givenname' ].should.equal('bob')
+                                attrs['service'   ].should.equal('other')
+                                attrs['permission'].should.eql(['p1','p2','p3'])
+                                attrs['uidnumber' ].should.equal('123456789')
+
+                                return done()
+                            })
+               request.get('http://'+testhost+':'+testport+'/cas_auth_2.xml'
+                          ,function(e,r,b){
+                               should.not.exist(e)
+                               parser(b)
+                               return  null
+                           })
+
+           });
+           srvr.listen(port,testhost,function(){
+               var j = request.jar()
+               request({'uri':'http://'+testhost+':'+port+'/test'
+                       ,'jar':j}
+                      ,function(e,r,b){
+                           return null
+                       })
+
+           })
+           return null
+       })
+})
