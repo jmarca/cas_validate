@@ -27,6 +27,56 @@ the redis setex command as suggested by @chrisbarran).  The test for
 this functionality (test/ttl_test.js) fails when running Redis 2.4,
 but passes when running Redis 2.6.
 
+# Version 0.1.9
+
+A minor update to parse attributes in a second way.  According to user
+@cricri's pull request, another way that is common to send user
+attributes to the CAS client is to simply list them.  That is, the way
+I am parsing by default is
+
+``` xml
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+	<cas:authenticationSuccess>
+		<cas:user>h_mueller</cas:user>
+		<cas:attributes>
+					<cas:mail>a.b@c.de</cas:mail>
+					<cas:__AUTHUSERCONTEXT__>cont</cas:__AUTHUSERCONTEXT__>
+					<cas:cn>commonname</cas:cn>
+					<cas:__AUTHTYPE__>TUID</cas:__AUTHTYPE__>
+					<cas:surname>Müller</cas:surname>
+					<cas:tudUserUniqueID>1234567</cas:tudUserUniqueID>
+					<cas:givenName>Hans</cas:givenName>
+		</cas:attributes>
+	</cas:authenticationSuccess>
+</cas:serviceResponse>
+```
+
+but there is an alternate way that simply lists the attributes as so:
+
+``` xml
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+  <cas:authenticationSuccess>
+    <cas:user>bob</cas:user>
+    <cas:attribute name="uid" value="b01234" />
+    <cas:attribute name="mail" value="bob@mail.com" />
+    <cas:attribute name="cn" value="smith" />
+    <cas:attribute name="givenname" value="bob" />
+    <cas:attribute name="service" value="other" />
+    <cas:attribute name="permission" value="p1" />
+    <cas:attribute name="permission" value="p2" />
+    <cas:attribute name="permission" value="p3" />
+    <cas:attribute name="uidnumber" value="123456789" />
+  </cas:authenticationSuccess>
+</cas:serviceResponse>
+```
+Version 0.1.9 should now properly parse the second way as well,
+whereas before it would simply choke and die.
+
+This email thread is one that I found when trying to dig up the
+"standard" way to send user attributes:
+http://jasig.275507.n4.nabble.com/CAS-attributes-and-how-they-appear-in-the-CAS-response-td264272.html
+
+
 # Version 0.1.8
 
 Biggest change here is a switch from SAX parser to XML doc parser for
