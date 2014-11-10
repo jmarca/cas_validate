@@ -51,7 +51,7 @@ I am parsing by default is
 </cas:serviceResponse>
 ```
 
-but there is an alternate way that simply lists the attributes as so:
+But there is an alternate way that simply lists the attributes as so:
 
 ```xml
 <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
@@ -69,10 +69,12 @@ but there is an alternate way that simply lists the attributes as so:
   </cas:authenticationSuccess>
 </cas:serviceResponse>
 ```
+
 Version 0.1.9 should now properly parse the second way as well,
 whereas before it would simply choke and die.
 
-Check out the test in
+Check out the test in test/xml_parser_test.js, look for the test with
+"cas_auth_2.xml" (about line 122 is where that test begins).
 
 This email thread is one that I found when trying to dig up the
 "standard" way to send user attributes:
