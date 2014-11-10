@@ -2,7 +2,7 @@
 
 This is a utility to facilitate validating a web service based on
 Connect or Express (and perhaps other frameworks or nothing at all)
-with a CAS server(<http://www.jasig.org/cas>.  It allows single sign
+with a CAS server(<https://www.apereo.org/cas>.  It allows single sign
 on and
 [single sign out](https://wiki.jasig.org/display/CASUM/Single+Sign+Out).
 In other words, if a client has previously logged in to the CAS
