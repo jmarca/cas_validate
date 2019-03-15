@@ -23,7 +23,7 @@
     "redis": "",
     "underscore": "",
     "libxmljs": "",
-    "request": "~2.16",
+    "request": ">=2.68.0",
     "winston": ""
   },
   "devDependencies": {
