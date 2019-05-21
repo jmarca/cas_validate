@@ -1,0 +1,29 @@
+language: node_js
+node_js:
+  - "node"
+
+env:
+  global:
+    - CAS_VERSION=5.3.x
+
+services:
+  - docker
+
+before_install:
+  - docker pull apereo/cas:$CAS_VERSION
+  - docker run -d  -p 8080:8080 -p 8443:8443 --name="cas"  apereo/cas:$CAS_VERSION
+
+before_script:
+  - while [ $? -ne 0 ]; do sleep 1 && curl -v http://localhost:8080; done
+  - echo '127.0.0.1 cas.example.org' >> /etc/hosts
+  # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  # - chmod +x ./cc-test-reporter
+  # - ./cc-test-reporter before-build
+
+# notifications:
+#   email:
+#     on_success: change
+#     on_failure: change
+
+# after_script:
+#   - ./node_modules/.bin/tap --coverage-report=lcov &&  ./cc-test-reporter after-build  -t lcov --exit-code $TRAVIS_TEST_RESULT
