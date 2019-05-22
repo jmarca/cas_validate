@@ -4,14 +4,14 @@ node_js:
 
 env:
   global:
-    - CAS_VERSION=5.3.x
+    - CAS_VERSION=5.3.10
 
 services:
   - docker
 
 before_install:
-  - docker pull apereo/cas:$CAS_VERSION
-  - docker run -d  -p 8080:8080 -p 8443:8443 --name="cas"  apereo/cas:$CAS_VERSION
+  - docker pull apereo/cas:v$CAS_VERSION
+  - docker run -d  -p 8443:8443 --name="cas"  apereo/cas:v$CAS_VERSION
 
 before_script:
   - while [ $? -ne 0 ]; do sleep 1 && curl -v http://localhost:8080; done

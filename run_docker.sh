@@ -67,6 +67,16 @@ cas_nw(){
     docker network create --driver bridge cas_nw
 }
 
+cas(){
+    del_stopped cas
+    relies_on_network cas_nw
+    docker run -d --rm \
+           -v /etc/localtime:/etc/localtime:ro \
+           --network=cas_nw \
+           --name="cas"  jmarca/cas
+    #      -p 8080:8080 -p 8443:8443 \
+
+}
 # couchdb(){
 #      relies_on_network couchdb_nw
 
@@ -113,5 +123,5 @@ cas_node_test(){
 cas_node_dev(){
     del_stopped "cas_node_dev"
     relies_on_network cas_nw
-    docker run --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw --name cas_node_dev node:8 bash
+    docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw --name cas_node_dev node:8 bash
 }

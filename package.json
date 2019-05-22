@@ -23,16 +23,16 @@
     "libxmljs": "^0.19.5",
     "redis": "^2.8.0",
     "request": ">=2.68.0",
+    "superagent": "^5.0.5",
+    "tap": "^14.1.7",
     "underscore": "^1.9.1",
-    "winston": ">=3.2.0"
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "async": "^3.0.0",
     "connect": "^3.7.0",
     "connect-redis": "^3.4.1",
-    "express": "^4.17.0",
-    "mocha": "^6.1.4",
-    "should": "^13.2.3"
+    "express": "^4.17.0"
   },
   "repository": "https://github.com/jmarca/cas_validate.git"
 }
