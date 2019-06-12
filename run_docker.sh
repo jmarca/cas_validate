@@ -67,6 +67,10 @@ cas_nw(){
     docker network create --driver bridge cas_nw
 }
 
+redis_nw(){
+    docker network create --driver bridge redis_nw
+}
+
 cas(){
     del_stopped cas
     relies_on_network cas_nw
@@ -77,6 +81,16 @@ cas(){
     #      -p 8080:8080 -p 8443:8443 \
 
 }
+
+redis(){
+    del_stopped redis
+    relies_on_network redis_nw
+    docker run -d --rm \
+           -v /etc/localtime:/etc/localtime:ro \
+           --network=redis_nw \
+           --name="redis" redis:alpine
+}
+
 # couchdb(){
 #      relies_on_network couchdb_nw
 
@@ -116,12 +130,14 @@ make_cas_node_tests_docker(){
 
 cas_node_test(){
     del_stopped "cas_node_tests"
-    relies_on_network cas_nw
-    docker run --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw --name cas_node_tests jmarca/cas_node_tests bash
+    relies_on cas
+    relies_on redis
+    docker run --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw --network redis_nw --name cas_node_tests jmarca/cas_node_tests bash
 }
 
 cas_node_dev(){
     del_stopped "cas_node_dev"
-    relies_on_network cas_nw
-    docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw --name cas_node_dev node:8 bash
+    relies_on cas
+    relies_on redis
+    docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw  --network redis_nw --name cas_node_dev node:8 bash
 }
