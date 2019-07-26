@@ -25,9 +25,6 @@ process.env.CAS_SESSION_TTL=2
 const cas_validate = require('../lib/cas_validate')
 const http = require('http')
 
-
-var sockets=[]
-
 var client
 
 function setup_server(){
@@ -51,7 +48,6 @@ function setup_server(){
     return new Promise((resolve,reject)=>{
         const server = http.createServer(app)
         server.listen(port, testhost, function(){
-            console.log('listening on ',testhost,port)
             resolve({'server':server,
                      'store':store,
                      'port':port})
@@ -80,7 +76,6 @@ function setup_server_http(){
     return new Promise((resolve,reject)=>{
         const server = http.createServer(app)
         server.listen(port, testhost, function(){
-            console.log('listening on ',testhost,port)
             resolve({'server':server,
                      'store':store,
                      'port':port})
@@ -108,7 +103,6 @@ function setup_server_https(){
     return new Promise((resolve,reject)=>{
         const server = http.createServer(app)
         server.listen(port, testhost, function(){
-            console.log('listening on ',testhost,port)
             resolve({'server':server,
                      'store':store,
                      'port':port})
@@ -118,11 +112,9 @@ function setup_server_https(){
 
 
 function close_server(server_store){
-    console.log('closing server')
     const result = new Promise(resolve => {
         server_store.store.client.quit()
         server_store.server.close( (e,r)=>{
-            console.log('server closed')
             return resolve()
         })
     })
@@ -140,7 +132,6 @@ function server_test(setup){
               .redirects(0)
 
               .then( res => {
-                  console.log('back from server with ',res.status)
                   t.is(res.status,307)
                   t.is(res.headers.location,casurl+'?service=http%3A%2F%2F'+ testhost +'%3A'+myport+'%2Findex.html')
               }).catch(e=>{
@@ -148,12 +139,11 @@ function server_test(setup){
                   console.log(e)
                   t.fail(e)
               }).then(()=>{
-                  console.log('calling t.end')
                   t.end()
               }).then(()=>{
                   return close_server(server_store)
               })
-        console.log('hate coursing through your veins')
+        //console.log('hate coursing through your veins')
     }
     return handler
 }
