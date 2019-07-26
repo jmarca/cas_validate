@@ -129,10 +129,14 @@ make_cas_node_tests_docker(){
 
 
 cas_node_test(){
+    docker stop cas_node_tests
     del_stopped "cas_node_tests"
     relies_on cas
     relies_on redis
-    docker run --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw --network redis_nw --name cas_node_tests jmarca/cas_node_tests bash
+    docker create --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev  --network redis_nw --name cas_node_tests jmarca/cas_node_tests bash
+    docker network connect cas_nw cas_node_tests
+    docker start cas_node_tests
+    docker attach cas_node_tests
 }
 
 cas_node_dev(){
