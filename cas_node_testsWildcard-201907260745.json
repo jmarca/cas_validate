@@ -1,0 +1,18 @@
+{
+  /*
+   * The CAS SAML IdP creates this endpoint as part of its initialization
+   * process at server startup time. If the service registry doesn't already
+   * contain an entry whose serviceId matches the endpoint, CAS will create
+   * a new service definition and save it to the registry. If the CAS server
+   * doesn't have write access to the registry, then the save will fail and
+   * the server will not start.
+   *
+   * To avoid that situation, and to make it clear that this endpoint is a
+   * "desired" service, it is defined explicitly here.
+   */
+  "@class" :            "org.apereo.cas.services.RegexRegisteredService",
+  "serviceId" :         "^https?://cas_node_tests.*",
+  "name" :              "casnodetests wildcard",
+  "id" :                201907260745,
+  "evaluationOrder" :   100
+}
