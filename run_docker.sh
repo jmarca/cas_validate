@@ -127,6 +127,24 @@ make_cas_node_tests_docker(){
     docker build  -t jmarca/cas_node_tests .
 }
 
+openldap_nw(){
+    docker network create --driver bridge openldap_nw
+}
+
+
+openldap(){
+    del_stopped openldap
+    relies_on_network openldap_nw
+    docker run --rm -d \
+           --network openldap_nw \
+           --name openldap \
+           -v ${PWD}/test/ldap_restore:/var/restore \
+           -e DOMAIN="activimetrics.com" \
+           -e ORGANIZATION="Activimetrics LLC" \
+           -e PASSWORD="grobblefruit" \
+           mwaeckerlin/openldap
+}
+
 
 cas_node_test(){
     docker stop cas_node_tests
