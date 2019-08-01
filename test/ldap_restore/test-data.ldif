@@ -1,0 +1,107 @@
+dn: dc=activimetrics,dc=com
+objectClass: organization
+objectClass: dcObject
+dc: activimetrics
+o: activimetrics
+structuralObjectClass: organization
+entryUUID: 72b1db0c-6c35-464e-a4cf-987f715cb10b
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730225321Z
+entryCSN: 20190730225321.074862Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730225321Z
+
+dn: ou=People,dc=activimetrics,dc=com
+objectClass: organizationalUnit
+ou: People
+structuralObjectClass: organizationalUnit
+entryUUID: 00705f3a-fda0-4feb-8154-339d809a4ccb
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730225321Z
+entryCSN: 20190730225321.108155Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730225321Z
+
+dn: ou=group,dc=activimetrics,dc=com
+objectClass: organizationalUnit
+ou: group
+structuralObjectClass: organizationalUnit
+entryUUID: acb19751-87f0-45b9-8414-c29d575a0518
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730225321Z
+entryCSN: 20190730225321.111212Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730225321Z
+
+dn: ou=machines,dc=activimetrics,dc=com
+objectClass: organizationalUnit
+ou: machines
+structuralObjectClass: organizationalUnit
+entryUUID: 9c4fb9d1-ad9b-45e3-83d7-a9714eff090b
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730225321Z
+entryCSN: 20190730225321.116066Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730225321Z
+
+dn: cn=users,ou=group,dc=activimetrics,dc=com
+objectClass: posixGroup
+description: users group
+gidNumber: 10000
+cn: users
+structuralObjectClass: posixGroup
+entryUUID: cb62bf0b-d947-4771-85e9-97cb03e57da5
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730225547Z
+entryCSN: 20190730225547.191864Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730225547Z
+
+dn: cn=Test User,ou=People,dc=activimetrics,dc=com
+objectClass: posixAccount
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+homeDirectory: /home/tuser
+loginShell: /bin/bash
+userPassword:: e1NTSEF9K3N6SXgwcEJXY21XNHd2TTdlRkYrZkkxNko1WlRWRnY=
+uid: tuser
+cn: Test User
+uidNumber: 10000
+gidNumber: 10000
+description: test user
+sn: User
+givenName: Test
+initials: TU
+structuralObjectClass: inetOrgPerson
+entryUUID: a57c0077-dbed-4f8b-87ba-df70b13d4fe8
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730225750Z
+entryCSN: 20190730225750.927154Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730225750Z
+
+dn: cn=Lame Loser,ou=People,dc=activimetrics,dc=com
+objectClass: posixAccount
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+homeDirectory: /home/lloser
+loginShell: /bin/bash
+userPassword:: e1NTSEF9ZTBpMkgvV0lCOTRRSCt0YzNzTzNkVjlDaHQxRVlUVnI=
+uid: lloser
+cn: Lame Loser
+uidNumber: 10001
+gidNumber: 10000
+description: Lame loser test user
+sn: Loser
+givenName: Lame
+initials: LL
+structuralObjectClass: inetOrgPerson
+entryUUID: 39126edc-97cb-4718-afe2-d06dae1f8d6c
+creatorsName: cn=admin,dc=activimetrics,dc=com
+createTimestamp: 20190730230006Z
+entryCSN: 20190730230006.553218Z#000000#000#000000
+modifiersName: cn=admin,dc=activimetrics,dc=com
+modifyTimestamp: 20190730230006Z
+

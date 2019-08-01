@@ -138,11 +138,12 @@ openldap(){
     docker run --rm -d \
            --network openldap_nw \
            --name openldap \
-           -v ${PWD}/test/ldap_restore:/var/restore \
            -e DOMAIN="activimetrics.com" \
            -e ORGANIZATION="Activimetrics LLC" \
            -e PASSWORD="grobblefruit" \
            mwaeckerlin/openldap
+    docker cp  ${PWD}/test/ldap_restore/test-data.ldif openldap:/var/restore/test-data.ldif
+    docker restart -t 0 openldap
 }
 
 
