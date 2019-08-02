@@ -1,13 +1,13 @@
 
 const tap = require('tap')
-
+const fs = require('fs')
 const env = process.env;
 const chost = env.CAS_HOST || 'cas';
 const cport = env.CAS_PORT || '8443';
-const cuser = env.CAS_USER;
-const cpass = env.CAS_PASS;
-const casservice = 'https://'+chost+':'+cport+'/'
-const casurl = casservice + 'cas/login'
+const cuser = env.CAS_USER || 'tuser';
+const cpass = env.CAS_PASS || 'western garden book';
+const casservice = 'https://'+chost+':'+cport+'/cas'
+const casurl = casservice + '/login'
 
 const testhost = env.CAS_VALIDATE_TEST_URL || 'cas_node_tests'
 var testport = env.CAS_VALIDATE_TEST_PORT || 3000
@@ -29,7 +29,7 @@ const connect = require('connect')
 
 process.env.CAS_SESSION_TTL=2
 const cas_validate = require('../lib/cas_validate')
-const http = require('http')
+const https = require('https')
 
 
 // need to set up a server running bits and pieces of sas validate to test this properly.
@@ -41,7 +41,7 @@ function _login_handler(b){
     var result = form_regex.exec(b)
     console.log(result[0],result[1])
     var opts={}
-    opts.url=casservice+result[1]
+    opts.url=casservice+'/'+result[1]
     opts.form={'username':cuser
                ,'password':cpass
                ,'submit':'LOGIN'
@@ -64,6 +64,7 @@ function _login_handler(b){
 
 
 function cas_login_function(j){
+    console.log('log in with cookie jar j=',j)
     var opts ={'url':casurl
                , 'jar': j
                , 'agentOptions': {
@@ -72,14 +73,16 @@ function cas_login_function(j){
                ,"followRedirect":true
               }
     const result = new Promise((resolve,reject)=>{
+        console.log(opts)
         request(opts
            ,(e,r,b)=>{
                console.log('log in to cas, response is:',b)
                Object.assign(opts,_login_handler(b))
+               console.log('parsed response, going to log in with options:', opts)
                request(opts
                   ,(ee,rr,bb)=>{
                       var success_regex = /Log In Successful/i;
-                      console.log(bb)
+                      console.log('back from login attempt\n', bb)
                       if(success_regex.test(bb)){
                           return resolve()
                       }else{
@@ -113,10 +116,10 @@ function setup_server(){
                        }))
           .use('/attributes'
                ,cas_validate.ticket({'cas_host':chost
-                                     ,'service':'http://'+testhost +':'+port+'/attributes'}))
+                                     ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,cas_validate.check_and_return({'cas_host':chost
-                                               ,'service':'http://'+testhost +':'+port+'/attributes'}))
+                                               ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,function(req,res,next){
                    cas_validate.get_attributes(req,function(err,obj){
@@ -131,9 +134,9 @@ function setup_server(){
                    return null
                })
           .use(cas_validate.ticket({'cas_host':chost
-                                    ,'service':'http://'+testhost +':'+port+'/'}))
+                                    ,'service':'https://'+testhost +':'+port+'/'}))
           .use(cas_validate.check_or_redirect({'cas_host':chost
-                                               ,'service':'http://'+testhost +':'+port+'/'}))
+                                               ,'service':'https://'+testhost +':'+port+'/'}))
           .use('/',function(req, res, next){
               res.end('hello world')
           })
@@ -143,7 +146,13 @@ function setup_server(){
               return null
           })
     return new Promise((resolve,reject)=>{
-        const server = http.createServer(app)
+
+        const options = {
+            key: fs.readFileSync('test/fixtures/keys/key.pem'),
+            cert: fs.readFileSync('test/fixtures/keys/cert.pem')
+        };
+
+        const server = https.createServer(options,app)
         server.listen(port, testhost, function(){
             console.log('server up:',testhost,port)
             resolve({'server':server,
@@ -174,7 +183,7 @@ async function no_session(t){
 
 
     const result = new Promise((resolve,reject) => {
-        request({'url': 'http://'+ testhost + ':' + myport + '/attributes'
+        request({'url': 'https://'+ testhost + ':' + myport + '/attributes'
                  , 'jar': j
                  ,agentOptions: {
                      rejectUnauthorized: false
@@ -182,9 +191,9 @@ async function no_session(t){
                  ,followRedirect:true}
                 , (e,r,b) => {
                     try {
+                        // console.log('e is ',e)
+                        // console.log('r is ',r)
                         t.notOk(e)
-                        //console.log('e is ',e)
-                        //console.log('r is ',r)
                         console.log('b is ',b)
                         t.equal(r.statusCode,200)
                         t.ok(b)
@@ -217,7 +226,7 @@ async function user_name_session(t){
                                                     return cb(e,rq)
                                                 })
 
-        request({'url': 'http://'+ testhost + ':' + myport + '/attributes'
+        request({'url': 'https://'+ testhost + ':' + myport + '/attributes'
                  , 'jar': j
                  ,agentOptions: {
                      rejectUnauthorized: false
@@ -256,9 +265,10 @@ setup_server()
             .then(async ()=>{
                 await tap.test('should return the current user name when there is a session',user_name_session)
 
-            })
-            .then(()=>{
-                tap.end()
-                return close_server(server_store)
+                    .then(()=>{
+                        console.log('comes second')
+                        tap.end()
+                        return close_server(server_store)
+                    })
             })
     })

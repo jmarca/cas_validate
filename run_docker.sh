@@ -71,15 +71,26 @@ redis_nw(){
     docker network create --driver bridge redis_nw
 }
 
+openldap_nw(){
+    docker network create --driver bridge openldap_nw
+}
+
 cas(){
     del_stopped cas
-    relies_on_network cas_nw
-    docker run -d --rm \
+    relies_on openldap
+    relies_on_network cas_nw openldap_nw
+    # docker run -d --rm \
+    #        -v /etc/localtime:/etc/localtime:ro \
+    #        --network=cas_nw \
+    #        --name="cas"  jmarca/cas
+    docker create --rm \
            -v /etc/localtime:/etc/localtime:ro \
-           --network=cas_nw \
-           --name="cas"  jmarca/cas
+           --network cas_nw \
+           --name cas jmarca/cas-overlay-template
+    docker network connect openldap_nw cas
+    docker start cas
+    # docker attach cas_node_tests
     #      -p 8080:8080 -p 8443:8443 \
-
 }
 
 redis(){
@@ -90,38 +101,6 @@ redis(){
            --network=redis_nw \
            --name="redis" redis:alpine
 }
-
-# couchdb(){
-#      relies_on_network couchdb_nw
-
-#      docker run -d --rm \
-#            -v /etc/localtime:/etc/localtime:ro \
-#            --network=couchdb_nw \
-#            --name couchdb \
-#            -E
-#            couchdb:latest
-# }
-
-# couch_set_state_test_setup(){
-#     # relies_on couchdb
-#     # sleep 1
-#     # docker exec postgres psql -h postgres -U postgres -c "CREATE USER testu WITH LOGIN CREATEDB PASSWORD 'my secret password';"
-#     # docker exec postgres psql -c 'create database atestdb;' -U testu -d postgres
-#     # docker exec postgres mkdir /var/log/logdb2
-#     # docker exec postgres mkdir /second
-#     # docker exec postgres chown -R postgres /second
-#     # docker exec postgres chown -R postgres /var/log/logdb2
-#     # docker exec postgres su-exec postgres initdb -D /second
-#     # sleep 1
-#     # docker exec postgres sh -c "echo 'host all all all trust' >> /second/pg_hba.conf"
-#     # docker exec postgres su-exec postgres pg_ctl -w -D /second -o "-p 5434" -l /var/log/logdb2/log start
-#     # docker exec postgres psql -p 5434 -U postgres -c "CREATE USER testu WITH LOGIN CREATEDB PASSWORD 'my secret password';"
-#     # docker exec postgres psql -p 5434 -c 'create database atestdb;' -U testu -d postgres
-
-#     # echo "{\"postgresql\":{\"host\":\"postgres\",\"port\":5432,\"username\":\"testu\",\"db\":\"atestdb\"}}" > test.config.json && chmod 0600 test.config.json
-
-
-# }
 
 make_cas_node_tests_docker(){
     docker build  -t jmarca/cas_node_tests .
@@ -150,8 +129,8 @@ openldap(){
 cas_node_test(){
     docker stop cas_node_tests
     del_stopped "cas_node_tests"
-    relies_on cas
-    relies_on redis
+    relies_on cas redis
+    relies_on_network cas_nw redis_nw
     docker create --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev  --network redis_nw --name cas_node_tests jmarca/cas_node_tests bash
     docker network connect cas_nw cas_node_tests
     docker start cas_node_tests
@@ -160,7 +139,7 @@ cas_node_test(){
 
 cas_node_dev(){
     del_stopped "cas_node_dev"
-    relies_on cas
-    relies_on redis
+    relies_on cas redis
+    relies_on_network redis_nw cas_nw
     docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw  --network redis_nw --name cas_node_dev node:8 bash
 }
