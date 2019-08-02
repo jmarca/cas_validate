@@ -5,7 +5,7 @@ const env = process.env;
 const chost = env.CAS_HOST || 'cas';
 const cport = env.CAS_PORT || '8443';
 const cuser = env.CAS_USER || 'tuser';
-const cpass = env.CAS_PASS || 'western garden book';
+const cpass = env.CAS_PASS || 'test';
 const casservice = 'https://'+chost+':'+cport+'/cas'
 const casurl = casservice + '/login'
 
@@ -49,12 +49,17 @@ function _login_handler(b){
     // scrape hidden input values
     var name_regex = /name="(.*?)"/
     var value_regex = /value="(.*?)"/
-    var hidden_regex = /<input.*type="hidden".*?>/g
+    var hidden_regex = /<input.*?type="hidden".*?\/>/g
     while ((result = hidden_regex.exec(b)) !== null)
     {
+        console.log(result[0])
         var n = name_regex.exec(result[0])
         var v = value_regex.exec(result[0])
-        opts.form[n[1]]=v[1]
+        if (v){
+            opts.form[n[1]]=v[1]
+        }else{
+            opts.form[n[1]]=null
+        }
     }
     console.log('opts is' )
     console.log(opts)
@@ -72,25 +77,33 @@ function cas_login_function(j){
                }
                ,"followRedirect":true
               }
+    console.log(opts)
     const result = new Promise((resolve,reject)=>{
-        console.log(opts)
         request(opts
            ,(e,r,b)=>{
-               console.log('log in to cas, response is:',b)
+               console.log('called cas/login, response is:', b, '\ncookie jar is', j)
+               console.log('cookies are:',j.getCookies(casurl))
                Object.assign(opts,_login_handler(b))
                console.log('parsed response, going to log in with options:', opts)
-               request(opts
-                  ,(ee,rr,bb)=>{
-                      var success_regex = /Log In Successful/i;
-                      console.log('back from login attempt\n', bb)
-                      if(success_regex.test(bb)){
-                          return resolve()
-                      }else{
-                          return reject('CAS login failed')
-                      }
-                  })
+               request.post(opts
+                            ,(ee,rr,bb)=>{
+                                if(ee){
+                                    console.log('post error',ee)
+                                }
+                                var success_regex = /Log In Successful/i;
+                                console.log('back from login attempt\n',
+                                            '\nbody is \n',bb,
+                                            //'\nresponse is\n',rr,
+                                            '\njar is', j)
+                                if(success_regex.test(bb)){
+                                    return resolve(j)
+                                }else{
+                                    return reject('CAS login failed')
+                                }
+                            })
            })
     })
+    return result
 }
 
 function cas_logout_function(rq,callback){
@@ -215,44 +228,55 @@ async function no_session(t){
 }
 
 async function user_name_session(t){
+    console.log('testing with a real user')
     const server_store = t.context.server_store
     const myport = server_store.port
     const j = request.jar()
 
     const result = new Promise((resolve,reject) => {
         // set up a session with CAS server
-        cas_login_function(j
-                           ,function(e){
-                                                    return cb(e,rq)
-                                                })
+        cas_login_function(j)
+            .then((jj)=>{
+                console.log('logged in, now try to get attributes')
 
-        request({'url': 'https://'+ testhost + ':' + myport + '/attributes'
-                 , 'jar': j
-                 ,agentOptions: {
-                     rejectUnauthorized: false
-                 }
-                 ,followRedirect:true}
-                , (e,r,b) => {
-                    try {
-                        t.notOk(e)
-                        //console.log('e is ',e)
-                        //console.log('r is ',r)
-                        console.log('b is ',b)
-                        t.equal(r.statusCode,200)
-                        t.ok(b)
-                        t.same(JSON.parse(b),{})
-                    }catch(e){
-                        console.log(e)
-                        t.fail()
-                        return reject(e)
-                    }
-                    return resolve()
-                });
+                request({'url': 'https://'+ testhost + ':' + myport + '/attributes'
+                         , 'jar': jj
+                         ,agentOptions: {
+                             rejectUnauthorized: false
+                         }
+                         ,followRedirect:true}
+                        , (e,r,b) => {
+                            try {
+                                t.notOk(e)
+                                //console.log('e is ',e)
+                                //console.log('r is ',r)
+                                console.log('b is ',b)
+                                t.equal(r.statusCode,200)
+                                t.ok(b)
+                                const u = JSON.parse(b)
+                                const expected_fields = ['commonName','givenName','sn','principalLdapDn']
+                                expected_fields.forEach( (param) => {
+                                    t.ok(u[param])
+                                })
+
+                            }catch(e){
+                                console.log(e)
+                                t.fail()
+                                return reject(e)
+                            }
+                            return resolve()
+                        });
+            })
+            .catch((e)=>{
+                console.log('login error?',e)
+                return resolve()
+            })
     })
     await result
         .catch( e =>{
             console.log(e)
         })
+    console.log('user name test is over')
     t.end()
 
 }
@@ -262,8 +286,8 @@ setup_server()
     .then(server_store =>{
         tap.context.server_store = server_store
         tap.test('should reply with an empty json object when no session is established',no_session)
-            .then(async ()=>{
-                await tap.test('should return the current user name when there is a session',user_name_session)
+            .then( ()=>{
+                tap.test('should return the current user name when there is a session',user_name_session)
 
                     .then(()=>{
                         console.log('comes second')
