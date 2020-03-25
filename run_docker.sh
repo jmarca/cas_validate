@@ -110,19 +110,44 @@ openldap_nw(){
     docker network create --driver bridge openldap_nw
 }
 
+lam(){
+    relies_on_network openldap_nw
+    relies_on openldap
+    docker run -p 8080:80 -it \
+           -e LDAP_DOMAIN="activimetrics.com" \
+           --env LDAP_SERVER=ldap://openldap:389 \
+           --network openldap_nw \
+           --name lam \
+           ldapaccountmanager/lam
+
+    # docker run --rm -it \
+    #        --network openldap_nw \
+    #        --env LAM_SKIP_PRECONFIGURE=false \
+    #        -e LDAP_DOMAIN="activimetrics.com" \
+    #        --env LDAP_SERVER=ldap://openldap:389 \
+    #        -e LDAP_ADMIN_PASSWORD="grobblefruit" \
+    #        --env LAM_LANG=en_US \
+    #        --env LAM_PASSWORD=lam \
+    #        ldapaccountmanager/lam:current
+}
 
 openldap(){
     del_stopped openldap
     relies_on_network openldap_nw
-    docker run --rm -d \
+    docker run --rm -it \
            --network openldap_nw \
            --name openldap \
-           -e DOMAIN="activimetrics.com" \
-           -e ORGANIZATION="Activimetrics LLC" \
-           -e PASSWORD="grobblefruit" \
-           mwaeckerlin/openldap
-    docker cp  ${PWD}/test/ldap_restore/test-data.ldif openldap:/var/restore/test-data.ldif
-    docker restart -t 0 openldap
+           -e LDAP_DOMAIN="activimetrics.com" \
+           -e LDAP_ORGANIZATION="Activimetrics LLC" \
+           -e LDAP_ADMIN_PASSWORD="grobblefruit" \
+           --volume ${PWD}/test/ldap_restore/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif \
+           osixia/openldap  --loglevel debug --copy-service
+
+
+    # mwaeckerlin/openldap
+    # docker cp  ${PWD}/test/ldap_restore/test-data.ldif openldap:/var/restore/test-data.ldif
+    # docker restart -t 0 openldap
+
 }
 
 

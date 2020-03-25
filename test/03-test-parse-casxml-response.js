@@ -32,14 +32,14 @@ const cas_validate = require('../lib/cas_validate')
 const https = require('https')
 
 
-// need to set up a server running bits and pieces of sas validate to test this properly.
+// need to set up a server running bits and pieces of cas validate to test this properly.
 // because the tests are responding to incoming connections.
 
 function _login_handler(b){
     // parse the body for the form url, with the correct jsessionid
     var form_regex = /id="fm1".*action="(.*)">/;
     var result = form_regex.exec(b)
-    console.log(result[0],result[1])
+    console.log("login handler form parse is ", result[0], result[1])
     var opts={}
     opts.url=casservice+'/'+result[1]
     opts.form={'username':cuser
@@ -52,7 +52,7 @@ function _login_handler(b){
     var hidden_regex = /<input.*?type="hidden".*?\/>/g
     while ((result = hidden_regex.exec(b)) !== null)
     {
-        console.log(result[0])
+        console.log("hidden form value:", result[0])
         var n = name_regex.exec(result[0])
         var v = value_regex.exec(result[0])
         if (v){
@@ -81,7 +81,7 @@ function cas_login_function(j){
     const result = new Promise((resolve,reject)=>{
         request(opts
            ,(e,r,b)=>{
-               console.log('called cas/login, response is:', b, '\ncookie jar is', j)
+               //console.log('called cas/login, response is:', b, '\ncookie jar is', j)
                console.log('cookies are:',j.getCookies(casurl))
                Object.assign(opts,_login_handler(b))
                console.log('parsed response, going to log in with options:', opts)
@@ -93,9 +93,10 @@ function cas_login_function(j){
                                 var success_regex = /Log In Successful/i;
                                 console.log('back from login attempt\n',
                                             '\nbody is \n',bb,
-                                            //'\nresponse is\n',rr,
+                                            '\nresponse is\n',rr,
                                             '\njar is', j)
                                 if(success_regex.test(bb)){
+                                    console.log('successful login. ', success_regex.exec(bb))
                                     return resolve(j)
                                 }else{
                                     return reject('CAS login failed')
@@ -136,6 +137,7 @@ function setup_server(){
           .use('/attributes'
                ,function(req,res,next){
                    cas_validate.get_attributes(req,function(err,obj){
+                       console.log('got attributes', err, obj)
                        if(err){
                            res.end(JSON.stringify({}))
                            return null

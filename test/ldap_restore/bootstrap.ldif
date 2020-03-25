@@ -1,0 +1,53 @@
+dn: ou=People,dc=activimetrics,dc=com
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=group,dc=activimetrics,dc=com
+objectClass: organizationalUnit
+ou: group
+
+
+dn: ou=machines,dc=activimetrics,dc=com
+objectClass: organizationalUnit
+ou: machines
+
+dn: cn=users,ou=group,dc=activimetrics,dc=com
+objectClass: posixGroup
+description: users group
+gidNumber: 10000
+cn: users
+
+dn: cn=Test User,ou=People,dc=activimetrics,dc=com
+objectClass: posixAccount
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+homeDirectory: /home/tuser
+loginShell: /bin/bash
+userPassword:: e1NTSEF9K3N6SXgwcEJXY21XNHd2TTdlRkYrZkkxNko1WlRWRnY=
+uid: tuser
+cn: Test User
+uidNumber: 10000
+gidNumber: 10000
+description: test user
+sn: User
+givenName: Test
+initials: TU
+
+
+dn: cn=Lame Loser,ou=People,dc=activimetrics,dc=com
+objectClass: posixAccount
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+homeDirectory: /home/lloser
+loginShell: /bin/bash
+userPassword:: e1NTSEF9ZTBpMkgvV0lCOTRRSCt0YzNzTzNkVjlDaHQxRVlUVnI=
+uid: lloser
+cn: Lurgy Loser
+uidNumber: 10001
+gidNumber: 10000
+description: Lurgy Loser test user
+sn: Loser
+givenName: Lame
+initials: LL

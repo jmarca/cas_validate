@@ -16,7 +16,7 @@
     "node": "*"
   },
   "scripts": {
-    "test": "NODE_ENV='test' mocha --timeout 15000 -R list --bail"
+    "test": "NODE_ENV='test' tap test/**/*-test*.js --cov"
   },
   "dependencies": {
     "hiredis": "^0.5.0",
@@ -32,7 +32,7 @@
     "connect-redis": "^3.4.1",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
-    "tap": "^14.2.2"
+    "tap": "^14.10.7"
   },
   "repository": "https://github.com/jmarca/cas_validate.git"
 }
