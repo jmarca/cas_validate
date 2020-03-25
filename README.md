@@ -18,6 +18,13 @@ applications.  The original development was conducted when Connect
 still had routing capabilities, but all but one feature still works
 with the latest Connect, and all features work with Express.
 
+# Request has been deprecated…
+
+As of February 2020, Request has been deprecated.  As cas_validate has
+been stuck for years in a state of un-testedness, and as I'm finally
+putting in some work trying to remedy that situation, I figure now is
+as good a time as any to move on from Request.
+
 
 # Redis version 2.6
 
