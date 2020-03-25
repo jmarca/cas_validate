@@ -9,16 +9,23 @@ const cpass = env.CAS_PASS || 'test';
 const casservice = 'https://'+chost+':'+cport+'/cas'
 const casurl = casservice + '/login'
 
-const testhost = env.CAS_VALIDATE_TEST_URL || 'cas_node_tests'
-var testport = env.CAS_VALIDATE_TEST_PORT || 3000
+const pem = require('pem');
+const trust_ca = fs.readFileSync('test/fixtures/keys/certificate.pem');
 
-const request = require('request');
-const agentOptions = {
-    host: 'www.example.com'
-    , port: '443'
-    , path: '/'
-    , rejectUnauthorized: false
-}
+const testhost = env.CAS_VALIDATE_TEST_URL || 'cas_node_tests'
+const testport = env.CAS_VALIDATE_TEST_PORT || 3000
+
+const {promisify} = require('util');
+const got = require('got')
+const toughCookie = require('tough-cookie');
+
+
+// const agentOptions = {
+//     host: 'www.example.com'
+//     , port: '443'
+//     , path: '/'
+//     , rejectUnauthorized: false
+// }
 
 const redishost = env.REDIS_HOST || 'redis'
 const redis = require('redis')
@@ -31,14 +38,53 @@ process.env.CAS_SESSION_TTL=2
 const cas_validate = require('../lib/cas_validate')
 const https = require('https')
 
+var s, key, cert, caRootKey, caRootCert;
+const pemCreateCertificate = promisify(pem.createCertificate)
+
+
+function gen_root_pem() {
+    console.log('gen root pem')
+    return pemCreateCertificate({days:1, selfSigned:true})
+        .then( (keys)=>{
+	    caRootKey = keys.serviceKey;
+	    caRootCert = keys.certificate;
+        })
+        .catch ((error)=>{
+            console.log('fidget spinners!  pem create certificate failed', error)
+        })
+}
+
+function gen_pem() {
+    console.log('gen pem')
+    return pemCreateCertificate({
+	serviceCertificate: caRootCert,
+	serviceKey: caRootKey,
+	serial: Date.now(),
+	days: 500,
+	country: '',
+	state: '',
+	locality: '',
+	organization: '',
+	organizationUnit: '',
+	commonName: 'cas_node_tests'
+    })
+        .then( (keys)=>{
+	    key = keys.clientKey;
+	    cert = keys.certificate;
+        })
+        .catch ((error)=>{
+            console.log('croc gibbets!  pem create certificate failed', error)
+        })
+}
 
 // need to set up a server running bits and pieces of cas validate to test this properly.
 // because the tests are responding to incoming connections.
 
 function _login_handler(b){
+    //console.log(b)
     // parse the body for the form url, with the correct jsessionid
     var form_regex = /id="fm1".*action="(.*)">/;
-    var result = form_regex.exec(b)
+    var result = form_regex.exec(b.body)
     console.log("login handler form parse is ", result[0], result[1])
     var opts={}
     opts.url=casservice+'/'+result[1]
@@ -50,7 +96,7 @@ function _login_handler(b){
     var name_regex = /name="(.*?)"/
     var value_regex = /value="(.*?)"/
     var hidden_regex = /<input.*?type="hidden".*?\/>/g
-    while ((result = hidden_regex.exec(b)) !== null)
+    while ((result = hidden_regex.exec(b.body)) !== null)
     {
         console.log("hidden form value:", result[0])
         var n = name_regex.exec(result[0])
@@ -68,43 +114,58 @@ function _login_handler(b){
 }
 
 
-function cas_login_function(j){
-    console.log('log in with cookie jar j=',j)
-    var opts ={'url':casurl
-               , 'jar': j
-               , 'agentOptions': {
-                   'rejectUnauthorized': false
-               }
-               ,"followRedirect":true
-              }
-    console.log(opts)
-    const result = new Promise((resolve,reject)=>{
-        request(opts
-           ,(e,r,b)=>{
-               //console.log('called cas/login, response is:', b, '\ncookie jar is', j)
-               console.log('cookies are:',j.getCookies(casurl))
-               Object.assign(opts,_login_handler(b))
-               console.log('parsed response, going to log in with options:', opts)
-               request.post(opts
-                            ,(ee,rr,bb)=>{
-                                if(ee){
-                                    console.log('post error',ee)
-                                }
-                                var success_regex = /Log In Successful/i;
-                                console.log('back from login attempt\n',
-                                            '\nbody is \n',bb,
-                                            '\nresponse is\n',rr,
-                                            '\njar is', j)
-                                if(success_regex.test(bb)){
-                                    console.log('successful login. ', success_regex.exec(bb))
-                                    return resolve(j)
-                                }else{
-                                    return reject('CAS login failed')
-                                }
-                            })
-           })
-    })
-    return result
+async function cas_login_function(cookieJar){
+
+    // var opts ={'url':casurl
+    //            , 'jar': j
+    //            , 'agentOptions': {
+    //                'rejectUnauthorized': false
+    //            }
+    //            ,"followRedirect":true
+    //           }
+    console.log('logging in to ', casurl)
+    // (async () => {
+    //     try {
+    //     	const response = await got('https://sindresorhus.com');
+    //     	console.log(response.body);
+    //     	//=> '<!doctype html> ...'
+    //     } catch (error) {
+    //     	console.log(error.response.body);
+    //     	//=> 'Internal server error ...'
+    //     }
+    // })();
+    const response = await got(casurl,{'cookieJar': cookieJar,
+                                       'rejectUnauthorized': false}
+                                       // strictSSL: true,
+		                      //  ca: caRootCert
+                                      // }
+                              )
+    //console.log(response.body)
+    console.log(response.headers)
+    console.log(cookieJar)
+    const opts = _login_handler(response)
+    console.log('parsed response, going to log in with options:', opts)
+    const login_response = await got.post(opts.url, {'cookieJar': cookieJar,
+                                                     'rejectUnauthorized': false}
+                                                     // body: opts.form,
+                                                     // strictSSL: true,
+		                                     // ca: caRootCert}
+                                         )
+
+    console.log('back from login attempt')
+    console.log(login_response.headers)
+    console.log(cookieJar)
+    //console.log(login_response.body)
+
+
+    const success_regex = /Log In Successful/i;
+    if(success_regex.test(login_response.body)){
+        console.log('successful login. ')//, success_regex.exec(bb))
+        return 'success'
+    }else{
+        throw 'CAS login failed'
+    }
+
 }
 
 function cas_logout_function(rq,callback){
@@ -129,7 +190,7 @@ function setup_server(){
 
                        }))
           .use('/attributes'
-               ,cas_validate.ticket({'cas_host':chost
+               ,cas_validate.ticket({'cas_host':'https://'+chost
                                      ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,cas_validate.check_and_return({'cas_host':chost
@@ -163,8 +224,8 @@ function setup_server(){
     return new Promise((resolve,reject)=>{
 
         const options = {
-            key: fs.readFileSync('test/fixtures/keys/key.pem'),
-            cert: fs.readFileSync('test/fixtures/keys/cert.pem')
+		key: key,
+		cert: cert
         };
 
         const server = https.createServer(options,app)
@@ -194,107 +255,83 @@ function close_server(server_store){
 async function no_session(t){
     const server_store = t.context.server_store
     const myport = server_store.port
-    const j = request.jar()
 
 
-    const result = new Promise((resolve,reject) => {
-        request({'url': 'https://'+ testhost + ':' + myport + '/attributes'
-                 , 'jar': j
-                 ,agentOptions: {
-                     rejectUnauthorized: false
-                 }
-                 ,followRedirect:true}
-                , (e,r,b) => {
-                    try {
-                        // console.log('e is ',e)
-                        // console.log('r is ',r)
-                        t.notOk(e)
-                        console.log('b is ',b)
-                        t.equal(r.statusCode,200)
-                        t.ok(b)
-                        t.same(JSON.parse(b),{})
-                    }catch(e){
-                        console.log(e)
-                        t.fail()
-                        return reject(e)
-                    }
-                    return resolve()
-                });
-    })
-    await result
-        .catch( e =>{
-            console.log(e)
-        })
+    try {
+        //console.log('no session', caRootCert)
+        const response = await got('https://'+ testhost + ':' + myport + '/attributes',
+                                   {rejectUnauthorized: false,
+                                    followRedirect: false,
+                                   }
+                                   // {strictSSL: true,
+		                    // ca: caRootCert,
+                                    // headers: { host: 'cas_node_tests' }}
+		                  )
+        console.log('response is ',response.body)
+        // console.log('e is ',e)
+        //console.log('res is ',res)
+        t.equal(response.statusCode,307)
+        t.same(response.body,"")
+    }catch(e) {
+        console.log(e)
+        t.fail()
+    }
     t.end()
-
 }
 
 async function user_name_session(t){
     console.log('testing with a real user')
     const server_store = t.context.server_store
     const myport = server_store.port
-    const j = request.jar()
 
-    const result = new Promise((resolve,reject) => {
-        // set up a session with CAS server
-        cas_login_function(j)
-            .then((jj)=>{
-                console.log('logged in, now try to get attributes')
+    const cookieJar = new toughCookie.CookieJar();
 
-                request({'url': 'https://'+ testhost + ':' + myport + '/attributes'
-                         , 'jar': jj
-                         ,agentOptions: {
-                             rejectUnauthorized: false
-                         }
-                         ,followRedirect:true}
-                        , (e,r,b) => {
-                            try {
-                                t.notOk(e)
-                                //console.log('e is ',e)
-                                //console.log('r is ',r)
-                                console.log('b is ',b)
-                                t.equal(r.statusCode,200)
-                                t.ok(b)
-                                const u = JSON.parse(b)
-                                const expected_fields = ['commonName','givenName','sn','principalLdapDn']
-                                expected_fields.forEach( (param) => {
-                                    t.ok(u[param])
-                                })
+    // set up a session with CAS server
+    const result = cas_login_function(cookieJar)
+        .then(()=>{
+            console.log('logged in, now try to get attributes')
 
-                            }catch(e){
-                                console.log(e)
-                                t.fail()
-                                return reject(e)
-                            }
-                            return resolve()
-                        });
-            })
-            .catch((e)=>{
-                console.log('login error?',e)
-                return resolve()
-            })
-    })
-    await result
+            got('https://'+ testhost + ':' + myport + '/attributes',{'cookieJar': cookieJar,
+                                                                     'rejectUnauthorized': false}
+                                                                    )
+
+                .then(res=>{
+                    //t.notOk(e)
+                    //console.log('e is ',e)
+                    //console.log('r is ',r)
+                    console.log('b is ',res.body)
+                    t.equal(res.status,200)
+                    t.ok(res.body)
+                    const u = res.body
+                    const expected_fields = ['commonName','givenName','sn','principalLdapDn']
+                    expected_fields.forEach( (param) => {
+                        t.ok(u[param])
+                    })
+                })
+
+                .catch((e)=>{
+                    console.log('login error?',e)
+                })
+        })
         .catch( e =>{
             console.log(e)
         })
-    console.log('user name test is over')
-    t.end()
-
+        .then( ()=>{
+            console.log('user name test is over')
+        })
 }
 
+var server_info
+(async ()=>{
+    await gen_root_pem()
+    await gen_pem()
+    server_info = await setup_server()
 
-setup_server()
-    .then(server_store =>{
-        tap.context.server_store = server_store
-        tap.test('should reply with an empty json object when no session is established',no_session)
-            .then( ()=>{
-                tap.test('should return the current user name when there is a session',user_name_session)
-
-                    .then(()=>{
-                        console.log('comes second')
-                        tap.end()
-                        return close_server(server_store)
-                    })
-            })
-    })
+    tap.context.server_store = server_info
+    await tap.test('should reply with an empty json object when no session is established',no_session)
+    await tap.test('should return the current user name when there is a session',user_name_session)
+        .then(()=>{
+            console.log('comes second')
+            close_server(server_info)
+        })
+})()
