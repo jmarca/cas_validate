@@ -9,19 +9,19 @@
 
 version: 1
 
-dn: dc=activimetrics,dc=com
-dc: activimetrics
-o: Example Inc.
-objectclass: top
-objectclass: dcObject
-objectclass: organization
+# dn: dc=activimetrics,dc=com
+# dc: activimetrics
+# o: Example Inc.
+# objectclass: top
+# objectclass: dcObject
+# objectclass: organization
 
-dn: cn=admin,dc=activimetrics,dc=com
-cn: admin
-description: LDAP administrator
-objectclass: simpleSecurityObject
-objectclass: organizationalRole
-userpassword: {SSHA}yFjb5dst66kUfLyTeFKzV6JDsVyhnUkm
+# dn: cn=admin,dc=activimetrics,dc=com
+# cn: admin
+# description: LDAP administrator
+# objectclass: simpleSecurityObject
+# objectclass: organizationalRole
+# userpassword: {SSHA}yFjb5dst66kUfLyTeFKzV6JDsVyhnUkm
 
 dn: ou=People,dc=activimetrics,dc=com
 objectclass: organizationalUnit
@@ -77,4 +77,3 @@ sn: Loser
 uid: lloser
 uidnumber: 10001
 userpassword: {SSHA}e0i2H/WIB94QH+tc3sO3dV9Cht1EYTVr
-

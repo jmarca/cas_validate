@@ -19,19 +19,30 @@
     "test": "NODE_ENV='test' tap test/**/*-test*.js --cov"
   },
   "dependencies": {
-    "hiredis": "^0.5.0",
+    "bent": "^7.1.2",
     "libxmljs2": "^0.21.4",
     "redis": "^2.8.0",
-    "superagent": "^5.0.8",
     "underscore": "^1.9.1",
     "winston": "^3.2.1"
   },
   "devDependencies": {
+    "agentkeepalive": "^4.1.0",
+    "ava": "^3.5.1",
     "connect": "^3.7.0",
     "connect-redis": "^3.4.1",
+    "create-test-server": "^3.0.1",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
-    "tap": "^14.10.7"
+    "form-data": "^3.0.0",
+    "got": "^10.7.0",
+    "mocha": "^7.1.1",
+    "pem": "^1.14.4",
+    "request": "^2.88.2",
+    "should": "^13.2.3",
+    "superagent": "^5.2.2",
+    "tap": "^14.10.7",
+    "tap-nyan": "^1.1.0",
+    "tough-cookie": "^3.0.0"
   },
   "repository": "https://github.com/jmarca/cas_validate.git"
 }
