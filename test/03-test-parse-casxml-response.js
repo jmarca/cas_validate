@@ -41,20 +41,21 @@ const https = require('https')
 var s, key, cert, caRootKey, caRootCert;
 const pemCreateCertificate = promisify(pem.createCertificate)
 
-
-function gen_root_pem() {
+function gen_root_pem(t) {
     console.log('gen root pem')
     return pemCreateCertificate({days:1, selfSigned:true})
         .then( (keys)=>{
 	    caRootKey = keys.serviceKey;
 	    caRootCert = keys.certificate;
+            t.end()
         })
         .catch ((error)=>{
             console.log('fidget spinners!  pem create certificate failed', error)
+            t.fail()
         })
 }
 
-function gen_pem() {
+function gen_pem(t) {
     console.log('gen pem')
     return pemCreateCertificate({
 	serviceCertificate: caRootCert,
@@ -71,9 +72,11 @@ function gen_pem() {
         .then( (keys)=>{
 	    key = keys.clientKey;
 	    cert = keys.certificate;
+            t.end()
         })
         .catch ((error)=>{
             console.log('croc gibbets!  pem create certificate failed', error)
+            t.fail()
         })
 }
 
@@ -85,7 +88,7 @@ function _login_handler(b){
     // parse the body for the form url, with the correct jsessionid
     var form_regex = /id="fm1".*action="(.*)">/;
     var result = form_regex.exec(b.body)
-    console.log("login handler form parse is ", result[0], result[1])
+    //console.log("login handler form parse is ", result[0], result[1])
     var opts={}
     opts.url=casservice+'/'+result[1]
     opts.form={'username':cuser
@@ -98,18 +101,18 @@ function _login_handler(b){
     var hidden_regex = /<input.*?type="hidden".*?\/>/g
     while ((result = hidden_regex.exec(b.body)) !== null)
     {
-        console.log("hidden form value:", result[0])
+        //console.log("hidden form value:", result[0])
         var n = name_regex.exec(result[0])
         var v = value_regex.exec(result[0])
         if (v){
             opts.form[n[1]]=v[1]
         }else{
-            opts.form[n[1]]=null
+            opts.form[n[1]]=''
         }
     }
-    console.log('opts is' )
-    console.log(opts)
-    console.log('--' )
+    //console.log('opts is' )
+    //console.log(opts)
+    //console.log('--' )
     return opts
 }
 
@@ -123,7 +126,7 @@ async function cas_login_function(cookieJar){
     //            }
     //            ,"followRedirect":true
     //           }
-    console.log('logging in to ', casurl)
+    //console.log('logging in to ', casurl)
     // (async () => {
     //     try {
     //     	const response = await got('https://sindresorhus.com');
@@ -134,27 +137,52 @@ async function cas_login_function(cookieJar){
     //     	//=> 'Internal server error ...'
     //     }
     // })();
-    const response = await got(casurl,{'cookieJar': cookieJar,
-                                       'rejectUnauthorized': false}
+    const response = await got.post(casurl,{'cookieJar': cookieJar,
+                                       'rejectUnauthorized': false,
+                                       //agent: keepaliveAgent,
+                                       //accept:"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
+                                       // headers:{
+                                       //     'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0',
+
+
+                                       //         }
+                                      }
                                        // strictSSL: true,
 		                      //  ca: caRootCert
                                       // }
                               )
-    //console.log(response.body)
-    console.log(response.headers)
-    console.log(cookieJar)
+    //console.log(response.headers)
+    //console.log(cookieJar)
+    //console.log(response)
     const opts = _login_handler(response)
-    console.log('parsed response, going to log in with options:', opts)
+    //console.log(opts)
+
+    //console.log('parsed response, going to log in with options:', opts)
     const login_response = await got.post(opts.url, {'cookieJar': cookieJar,
-                                                     'rejectUnauthorized': false}
-                                                     // body: opts.form,
+                                                     'rejectUnauthorized': false,
+                                                     form: opts.form,
+                                                     // headers:{
+                                                     //     'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0',
+
+
+                                                     //         },
                                                      // strictSSL: true,
 		                                     // ca: caRootCert}
-                                         )
+                                                     // hooks: {
+		                                     //     beforeRequest: [
+			                             //         async options => {
+				                     //             console.log('options are\n', options)
+			                             //         }
+		                                     //     ]
+	                                             // }
+                                                    })
 
-    console.log('back from login attempt')
-    console.log(login_response.headers)
-    console.log(cookieJar)
+    // console.log('back from login attempt')
+    // console.log(login_response.headers)
+    // console.log(cookieJar)
+    // console.log('asked for')
+    // console.log(response.request)
+
     //console.log(login_response.body)
 
 
@@ -163,6 +191,7 @@ async function cas_login_function(cookieJar){
         console.log('successful login. ')//, success_regex.exec(bb))
         return 'success'
     }else{
+        //console.log('login failed, probably cookie issue',login_response.body)
         throw 'CAS login failed'
     }
 
@@ -191,14 +220,17 @@ function setup_server(){
                        }))
           .use('/attributes'
                ,cas_validate.ticket({'cas_host':'https://'+chost
+                                     ,'cas_port':cport
                                      ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,cas_validate.check_and_return({'cas_host':chost
                                                ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,function(req,res,next){
+                   console.log('in /attributes, passed ticket and checks')
+
                    cas_validate.get_attributes(req,function(err,obj){
-                       console.log('got attributes', err, obj)
+                       //console.log('got attributes', err, obj)
                        if(err){
                            res.end(JSON.stringify({}))
                            return null
@@ -252,86 +284,83 @@ function close_server(server_store){
     return result
 }
 
-async function no_session(t){
+const no_session = async (t) => {
     const server_store = t.context.server_store
     const myport = server_store.port
-
-
     try {
         //console.log('no session', caRootCert)
         const response = await got('https://'+ testhost + ':' + myport + '/attributes',
                                    {rejectUnauthorized: false,
                                     followRedirect: false,
+                                    //headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+
                                    }
                                    // {strictSSL: true,
 		                    // ca: caRootCert,
                                     // headers: { host: 'cas_node_tests' }}
 		                  )
-        console.log('response is ',response.body)
+        //console.log('response is ',response.body)
         // console.log('e is ',e)
         //console.log('res is ',res)
         t.equal(response.statusCode,307)
         t.same(response.body,"")
+        //t.end()
     }catch(e) {
         console.log(e)
         t.fail()
     }
-    t.end()
 }
 
-async function user_name_session(t){
+const user_name_session = async (t)=>{
+
     console.log('testing with a real user')
     const server_store = t.context.server_store
     const myport = server_store.port
 
     const cookieJar = new toughCookie.CookieJar();
 
-    // set up a session with CAS server
-    const result = cas_login_function(cookieJar)
-        .then(()=>{
-            console.log('logged in, now try to get attributes')
+    try {
+        // set up a session with CAS server
+        const result = await cas_login_function(cookieJar)
 
-            got('https://'+ testhost + ':' + myport + '/attributes',{'cookieJar': cookieJar,
-                                                                     'rejectUnauthorized': false}
-                                                                    )
+        try {
+            const res = await got('https://'+ testhost + ':' + myport + '/attributes',
+                                  {cookieJar,
+                                   'rejectUnauthorized': false,
+                                  'responseType':'json'},
+                                 )
+            console.log('back from attribute grab attempt')
+            t.equal(res.statusCode,200)
+            t.ok(res.body)
+            const u = res.body
+            const expected_fields = ["user_name","credentialType","authenticationDate","authenticationMethod"]
+            expected_fields.forEach( (param) => {
+                t.ok(u[param])
+            })
+        } catch(e) {
+            console.error(e); // 30
+        }
+    }catch(e){
+        console.log('login error?',e)
+        t.fail('login error')
+    }
 
-                .then(res=>{
-                    //t.notOk(e)
-                    //console.log('e is ',e)
-                    //console.log('r is ',r)
-                    console.log('b is ',res.body)
-                    t.equal(res.status,200)
-                    t.ok(res.body)
-                    const u = res.body
-                    const expected_fields = ['commonName','givenName','sn','principalLdapDn']
-                    expected_fields.forEach( (param) => {
-                        t.ok(u[param])
-                    })
-                })
-
-                .catch((e)=>{
-                    console.log('login error?',e)
-                })
-        })
-        .catch( e =>{
-            console.log(e)
-        })
-        .then( ()=>{
-            console.log('user name test is over')
-        })
 }
 
-var server_info
-(async ()=>{
-    await gen_root_pem()
-    await gen_pem()
-    server_info = await setup_server()
+
+const  main = async () => {
+    await tap.test('gen root pem', gen_root_pem)
+    await tap.test('gen pem',gen_pem)
+    const server_info = await setup_server()
 
     tap.context.server_store = server_info
+    //test.context.server_store = server_info
+
     await tap.test('should reply with an empty json object when no session is established',no_session)
     await tap.test('should return the current user name when there is a session',user_name_session)
-        .then(()=>{
-            console.log('comes second')
-            close_server(server_info)
-        })
-})()
+    console.log('comes second')
+    await close_server(server_info)
+    console.log('tests are all done!')
+    tap.end()
+}
+main()

@@ -140,7 +140,7 @@ openldap(){
            -e LDAP_DOMAIN="activimetrics.com" \
            -e LDAP_ORGANIZATION="Activimetrics LLC" \
            -e LDAP_ADMIN_PASSWORD="grobblefruit" \
-           --volume ${PWD}/test/ldap_restore/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif \
+           --volume ${PWD}/test/ldap_restore/ldif_dump.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif \
            osixia/openldap  --loglevel debug --copy-service
 
 
