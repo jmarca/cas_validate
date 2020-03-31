@@ -89,9 +89,11 @@ cas(){
            --name cas jmarca/cas-overlay-template
     docker network connect openldap_nw cas
     # copy in keystore for server
-    docker cp  ${PWD}/test/fixtures/keys/keystore_tests/thekeystore cas:/etc/cas/thekeystore
+    docker cp ${PWD}/test/fixtures/keys/keystore_tests/thekeystore cas:/etc/cas/thekeystore
     # copy cer for server
-    docker cp  ${PWD}/test/fixtures/keys/keystore_tests/cas.cer cas:/etc/cas/cas.cer
+    docker cp ${PWD}/test/fixtures/keys/keystore_tests/cas.cer cas:/etc/cas/cas.cer
+    # copy in my configuration
+    docker cp ${PWD}/test/fixtures/cas/cas.properties cas:/etc/cas/config/cas.properties
     # start the container
     docker start cas
     # docker attach cas_node_tests
