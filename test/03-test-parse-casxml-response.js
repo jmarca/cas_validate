@@ -10,7 +10,7 @@ const casservice = 'https://'+chost+':'+cport+'/cas'
 const casurl = casservice + '/login'
 
 const pem = require('pem');
-const trust_ca = fs.readFileSync('test/fixtures/keys/certificate.pem');
+//const trust_ca = fs.readFileSync('test/fixtures/keys/certificate.pem');
 
 const testhost = env.CAS_VALIDATE_TEST_URL || 'cas_node_tests'
 const testport = env.CAS_VALIDATE_TEST_PORT || 3000
@@ -138,7 +138,9 @@ async function cas_login_function(cookieJar){
     //     }
     // })();
     const response = await got.post(casurl,{'cookieJar': cookieJar,
-                                       'rejectUnauthorized': false,
+                                            // strictSSL: true,
+		                            // ca: caRootCert,
+                                            'rejectUnauthorized': false,
                                        //agent: keepaliveAgent,
                                        //accept:"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
                                        // headers:{
@@ -147,9 +149,6 @@ async function cas_login_function(cookieJar){
 
                                        //         }
                                       }
-                                       // strictSSL: true,
-		                      //  ca: caRootCert
-                                      // }
                               )
     //console.log(response.headers)
     //console.log(cookieJar)
@@ -159,6 +158,8 @@ async function cas_login_function(cookieJar){
 
     //console.log('parsed response, going to log in with options:', opts)
     const login_response = await got.post(opts.url, {'cookieJar': cookieJar,
+                                                     // strictSSL: true,
+		                                     // ca: caRootCert,
                                                      'rejectUnauthorized': false,
                                                      form: opts.form,
                                                      // headers:{
@@ -166,8 +167,6 @@ async function cas_login_function(cookieJar){
 
 
                                                      //         },
-                                                     // strictSSL: true,
-		                                     // ca: caRootCert}
                                                      // hooks: {
 		                                     //     beforeRequest: [
 			                             //         async options => {
@@ -290,8 +289,11 @@ const no_session = async (t) => {
     try {
         //console.log('no session', caRootCert)
         const response = await got('https://'+ testhost + ':' + myport + '/attributes',
-                                   {rejectUnauthorized: false,
-                                    followRedirect: false,
+                                   {
+                                       // strictSSL: true,
+		                       // ca: caRootCert,
+                                       rejectUnauthorized: false,
+                                       followRedirect: false,
                                     //headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'}
 
                                    }
@@ -327,7 +329,9 @@ const user_name_session = async (t)=>{
             const res = await got('https://'+ testhost + ':' + myport + '/attributes',
                                   {cookieJar,
                                    'rejectUnauthorized': false,
-                                  'responseType':'json'},
+                                   // strictSSL: true,
+		                   // ca: caRootCert,
+                                   'responseType':'json'},
                                  )
             console.log('back from attribute grab attempt')
             t.equal(res.statusCode,200)
@@ -349,8 +353,15 @@ const user_name_session = async (t)=>{
 
 
 const  main = async () => {
-    await tap.test('gen root pem', gen_root_pem)
+    //await tap.test('gen root pem', gen_root_pem)
+    // var s, key, cert, caRootKey, caRootCert;
+    caRootCert = fs.readFileSync('test/fixtures/keys/keystore_tests/root.pem', 'utf8')
+    caRootKey  = fs.readFileSync('test/fixtures/keys/keystore_tests/root_key.pem', 'utf8')
+    console.log(caRootCert)
     await tap.test('gen pem',gen_pem)
+    //cert = fs.readFileSync('test/fixtures/keys/keystore_tests/cas_node_tests.pem')
+    //key = fs.readFileSync('test/fixtures/keys/keystore_tests/cas_node_tests_key.pem')
+
     const server_info = await setup_server()
 
     tap.context.server_store = server_info
