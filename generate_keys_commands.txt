@@ -1,0 +1,8 @@
+keytool -genkeypair -storepass changeit -keystore thekeystore -deststoretype pkcs12 -alias root -dname CN=root -ext bc:c
+keytool -genkeypair -storepass changeit -keystore thekeystore -deststoretype pkcs12 -alias cas -dname CN=cas -ext bc:c
+keytool -genkeypair -storepass changeit -keystore thekeystore -deststoretype pkcs12 -alias cas_node_tests -dname CN=cas_node_tests -ext bc:c
+keytool -storepass changeit -keystore thekeystore -alias cas -certreq  |  keytool -storepass changeit -keystore thekeystore -alias root -gencert -ext san=dns:cas | keytool -storepass changeit -keystore thekeystore -alias cas -importcert
+keytool -storepass changeit -keystore thekeystore -alias cas_node_tests -certreq  |  keytool -storepass changeit -keystore thekeystore -alias root -gencert  | keytool -storepass changeit -keystore thekeystore -alias cas_node_tests -importcert
+keytool -importkeystore  -srcstorepass changeit   -srckeystore thekeystore     -destkeystore cas_node_tests.p12     -deststoretype PKCS12     -srcalias cas_node_tests     -deststorepass changeit
+openssl pkcs12 -in cas_node_tests.p12  -nokeys -out cas_node_tests.pem
+openssl pkcs12 -in cas_node_tests.p12  -nodes -nocerts -out cas_node_tests_key.pem
