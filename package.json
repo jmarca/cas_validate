@@ -1,5 +1,5 @@
 {
-  "name": "cas_validate",
+  "name": "@jmarca/cas_validate",
   "description": "Interact with a CAS server to validate client interaction",
   "version": "0.2.0",
   "author": "James E. Marca <jmarca@translab.its.uci.edu>",
@@ -10,7 +10,8 @@
     "authentication"
   ],
   "directories": {
-    "lib": "./lib"
+    "lib": "lib",
+    "test": "test"
   },
   "engines": {
     "node": "*"
@@ -37,5 +38,13 @@
     "tap": "^14.10.7",
     "tough-cookie": "^3.0.0"
   },
-  "repository": "https://github.com/jmarca/cas_validate.git"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmarca/cas_validate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jmarca/cas_validate/issues"
+  },
+  "homepage": "https://github.com/jmarca/cas_validate#readme",
+  "main": "index.js"
 }
