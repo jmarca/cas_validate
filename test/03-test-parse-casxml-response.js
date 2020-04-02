@@ -42,7 +42,7 @@ var s, key, cert, caRootKey, caRootCert;
 const pemCreateCertificate = promisify(pem.createCertificate)
 
 function gen_root_pem(t) {
-    console.log('gen root pem')
+    //console.log('gen root pem')
     return pemCreateCertificate({days:1, selfSigned:true})
         .then( (keys)=>{
 	    caRootKey = keys.serviceKey;
@@ -56,7 +56,7 @@ function gen_root_pem(t) {
 }
 
 function gen_pem(t) {
-    console.log('gen pem')
+    //console.log('gen pem')
     return pemCreateCertificate({
 	serviceCertificate: caRootCert,
 	serviceKey: caRootKey,
@@ -187,7 +187,7 @@ async function cas_login_function(cookieJar){
 
     const success_regex = /Log In Successful/i;
     if(success_regex.test(login_response.body)){
-        console.log('successful login. ')//, success_regex.exec(bb))
+        //console.log('successful login. ')//, success_regex.exec(bb))
         return 'success'
     }else{
         //console.log('login failed, probably cookie issue',login_response.body)
@@ -226,7 +226,7 @@ function setup_server(){
                                                ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,function(req,res,next){
-                   console.log('in /attributes, passed ticket and checks')
+                   //console.log('in /attributes, passed ticket and checks')
 
                    cas_validate.get_attributes(req,function(err,obj){
                        //console.log('got attributes', err, obj)
@@ -261,7 +261,7 @@ function setup_server(){
 
         const server = https.createServer(options,app)
         server.listen(port, testhost, function(){
-            console.log('server up:',testhost,port)
+            //console.log('server up:',testhost,port)
             resolve({'server':server,
                      'store':store,
                      'port':port})
@@ -272,11 +272,11 @@ function setup_server(){
 
 
 function close_server(server_store){
-    console.log('closing server')
+    //console.log('closing server')
     const result = new Promise(resolve => {
         server_store.store.client.quit()
         server_store.server.close( (e,r)=>{
-            console.log('server closed')
+            //console.log('server closed')
             return resolve()
         })
     })
@@ -315,7 +315,7 @@ const no_session = async (t) => {
 
 const user_name_session = async (t)=>{
 
-    console.log('testing with a real user')
+    //console.log('testing with a real user')
     const server_store = t.context.server_store
     const myport = server_store.port
 
@@ -333,7 +333,7 @@ const user_name_session = async (t)=>{
 		                   // ca: caRootCert,
                                    'responseType':'json'},
                                  )
-            console.log('back from attribute grab attempt')
+            //console.log('back from attribute grab attempt')
             t.equal(res.statusCode,200)
             t.ok(res.body)
             const u = res.body
@@ -357,7 +357,7 @@ const  main = async () => {
     // var s, key, cert, caRootKey, caRootCert;
     caRootCert = fs.readFileSync('test/fixtures/keys/keystore_tests/root.pem', 'utf8')
     caRootKey  = fs.readFileSync('test/fixtures/keys/keystore_tests/root_key.pem', 'utf8')
-    console.log(caRootCert)
+    //console.log(caRootCert)
     await tap.test('gen pem',gen_pem)
     //cert = fs.readFileSync('test/fixtures/keys/keystore_tests/cas_node_tests.pem')
     //key = fs.readFileSync('test/fixtures/keys/keystore_tests/cas_node_tests_key.pem')
@@ -369,9 +369,9 @@ const  main = async () => {
 
     await tap.test('should reply with an empty json object when no session is established',no_session)
     await tap.test('should return the current user name when there is a session',user_name_session)
-    console.log('comes second')
+    //console.log('comes second')
     await close_server(server_info)
-    console.log('tests are all done!')
+    //console.log('tests are all done!')
     tap.end()
 }
 main()
