@@ -3,15 +3,16 @@ const force_protocol = require('../lib/force_protocol');
 
 function test_force_protocol (t) {
 
-    t.is(force_protocol('cas.staging.localhost'),'https://cas.staging.localhost')
-    t.is(force_protocol('cas.staging.localhost:8443'),'https://cas.staging.localhost:8443')
-    t.is(force_protocol('http://cas.staging.localhost'),'https://cas.staging.localhost')
-    t.is(force_protocol('https://cas.staging.localhost'),'https://cas.staging.localhost')
-    t.is(force_protocol('http://cas.staging.localhost:8443'),'https://cas.staging.localhost:8443')
+    t.is(force_protocol('cas.staging.localhost'),'https://cas.staging.localhost:8443')
+    t.is(force_protocol('cas.staging.localhost',8444),'https://cas.staging.localhost:8444')
+    t.is(force_protocol('http://cas.staging.localhost'),'https://cas.staging.localhost:8443')
+    t.is(force_protocol('https://cas.staging.localhost'),'https://cas.staging.localhost:8443')
+    t.is(force_protocol('http://cas.staging.localhost',8442),'https://cas.staging.localhost:8442')
     t.is(force_protocol('https://cas.staging.localhost:8443'),'https://cas.staging.localhost:8443')
-    t.is(force_protocol('cas.staging.localhost/this/is/a/path'),'https://cas.staging.localhost')
+
+    t.is(force_protocol('cas.staging.localhost/this/is/a/path'),'https://cas.staging.localhost:8443')
     t.is(force_protocol('cas.staging.localhost:8443/this/is/a/path'),'https://cas.staging.localhost:8443')
-    t.is(force_protocol('http://cas.staging.localhost/this/is/a/path'),'https://cas.staging.localhost')
+    t.is(force_protocol('http://cas.staging.localhost/this/is/a/path',8442),'https://cas.staging.localhost:8442')
     t.is(force_protocol('http://cas.staging.localhost:8443/this/is/a/path'),'https://cas.staging.localhost:8443')
     t.is(force_protocol('https://cas.staging.localhost:8443/this/is/a/path'),'https://cas.staging.localhost:8443')
     t.end()

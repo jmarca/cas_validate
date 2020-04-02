@@ -88,6 +88,13 @@ cas(){
            --network cas_nw \
            --name cas jmarca/cas-overlay-template
     docker network connect openldap_nw cas
+    # copy in keystore for server
+    docker cp ${PWD}/test/fixtures/keys/keystore_tests/thekeystore cas:/etc/cas/thekeystore
+    # copy cer for server
+    docker cp ${PWD}/test/fixtures/keys/keystore_tests/cas.cer cas:/etc/cas/cas.cer
+    # copy in my configuration
+    docker cp ${PWD}/test/fixtures/cas/cas.properties cas:/etc/cas/config/cas.properties
+    # start the container
     docker start cas
     # docker attach cas_node_tests
     #      -p 8080:8080 -p 8443:8443 \
@@ -140,7 +147,7 @@ openldap(){
            -e LDAP_DOMAIN="activimetrics.com" \
            -e LDAP_ORGANIZATION="Activimetrics LLC" \
            -e LDAP_ADMIN_PASSWORD="grobblefruit" \
-           --volume ${PWD}/test/ldap_restore/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif \
+           --volume ${PWD}/test/ldap_restore/ldif_dump.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif \
            osixia/openldap  --loglevel debug --copy-service
 
 
@@ -166,5 +173,5 @@ cas_node_dev(){
     del_stopped "cas_node_dev"
     relies_on cas redis
     relies_on_network redis_nw cas_nw
-    docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw  --network redis_nw --name cas_node_dev node:8 bash
+    docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw  --network redis_nw --name cas_node_dev node:12 bash
 }

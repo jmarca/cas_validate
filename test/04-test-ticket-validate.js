@@ -1,4 +1,3 @@
-
 const tap = require('tap')
 const fs = require('fs')
 const env = process.env;
@@ -10,7 +9,6 @@ const casservice = 'https://'+chost+':'+cport+'/cas'
 const casurl = casservice + '/login'
 
 const pem = require('pem');
-//const trust_ca = fs.readFileSync('test/fixtures/keys/certificate.pem');
 
 const testhost = env.CAS_VALIDATE_TEST_URL || 'cas_node_tests'
 const testport = env.CAS_VALIDATE_TEST_PORT || 3000
@@ -42,7 +40,7 @@ var s, key, cert, caRootKey, caRootCert;
 const pemCreateCertificate = promisify(pem.createCertificate)
 
 function gen_root_pem(t) {
-    //console.log('gen root pem')
+    console.log('gen root pem')
     return pemCreateCertificate({days:1, selfSigned:true})
         .then( (keys)=>{
 	    caRootKey = keys.serviceKey;
@@ -56,7 +54,7 @@ function gen_root_pem(t) {
 }
 
 function gen_pem(t) {
-    //console.log('gen pem')
+    console.log('gen pem')
     return pemCreateCertificate({
 	serviceCertificate: caRootCert,
 	serviceKey: caRootKey,
@@ -138,9 +136,7 @@ async function cas_login_function(cookieJar){
     //     }
     // })();
     const response = await got.post(casurl,{'cookieJar': cookieJar,
-                                            // strictSSL: true,
-		                            // ca: caRootCert,
-                                            'rejectUnauthorized': false,
+                                       'rejectUnauthorized': false,
                                        //agent: keepaliveAgent,
                                        //accept:"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
                                        // headers:{
@@ -149,6 +145,9 @@ async function cas_login_function(cookieJar){
 
                                        //         }
                                       }
+                                       // strictSSL: true,
+		                      //  ca: caRootCert
+                                      // }
                               )
     //console.log(response.headers)
     //console.log(cookieJar)
@@ -158,8 +157,6 @@ async function cas_login_function(cookieJar){
 
     //console.log('parsed response, going to log in with options:', opts)
     const login_response = await got.post(opts.url, {'cookieJar': cookieJar,
-                                                     // strictSSL: true,
-		                                     // ca: caRootCert,
                                                      'rejectUnauthorized': false,
                                                      form: opts.form,
                                                      // headers:{
@@ -167,6 +164,8 @@ async function cas_login_function(cookieJar){
 
 
                                                      //         },
+                                                     // strictSSL: true,
+		                                     // ca: caRootCert}
                                                      // hooks: {
 		                                     //     beforeRequest: [
 			                             //         async options => {
@@ -187,7 +186,7 @@ async function cas_login_function(cookieJar){
 
     const success_regex = /Log In Successful/i;
     if(success_regex.test(login_response.body)){
-        //console.log('successful login. ')//, success_regex.exec(bb))
+        console.log('successful login. ')//, success_regex.exec(bb))
         return 'success'
     }else{
         //console.log('login failed, probably cookie issue',login_response.body)
@@ -226,7 +225,7 @@ function setup_server(){
                                                ,'service':'https://'+testhost +':'+port+'/attributes'}))
           .use('/attributes'
                ,function(req,res,next){
-                   //console.log('in /attributes, passed ticket and checks')
+                   console.log('in /attributes, passed ticket and checks')
 
                    cas_validate.get_attributes(req,function(err,obj){
                        //console.log('got attributes', err, obj)
@@ -261,7 +260,7 @@ function setup_server(){
 
         const server = https.createServer(options,app)
         server.listen(port, testhost, function(){
-            //console.log('server up:',testhost,port)
+            console.log('server up:',testhost,port)
             resolve({'server':server,
                      'store':store,
                      'port':port})
@@ -272,106 +271,58 @@ function setup_server(){
 
 
 function close_server(server_store){
-    //console.log('closing server')
+    console.log('closing server')
     const result = new Promise(resolve => {
         server_store.store.client.quit()
         server_store.server.close( (e,r)=>{
-            //console.log('server closed')
+            console.log('server closed')
             return resolve()
         })
     })
     return result
 }
 
-const no_session = async (t) => {
-    const server_store = t.context.server_store
-    const myport = server_store.port
-    try {
-        //console.log('no session', caRootCert)
-        const response = await got('https://'+ testhost + ':' + myport + '/attributes',
-                                   {
-                                       // strictSSL: true,
-		                       // ca: caRootCert,
-                                       rejectUnauthorized: false,
-                                       followRedirect: false,
-                                    //headers:{'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'}
-
-                                   }
-                                   // {strictSSL: true,
-		                    // ca: caRootCert,
-                                    // headers: { host: 'cas_node_tests' }}
-		                  )
-        //console.log('response is ',response.body)
-        // console.log('e is ',e)
-        //console.log('res is ',res)
-        t.equal(response.statusCode,307)
-        t.same(response.body,"")
-        //t.end()
-    }catch(e) {
-        console.log(e)
-        t.fail()
-    }
-}
-
-const user_name_session = async (t)=>{
-
-    //console.log('testing with a real user')
+const giant_ticket = async (t) => {
     const server_store = t.context.server_store
     const myport = server_store.port
 
-    const cookieJar = new toughCookie.CookieJar();
 
-    try {
-        // set up a session with CAS server
-        const result = await cas_login_function(cookieJar)
-
-        try {
-            const res = await got('https://'+ testhost + ':' + myport + '/attributes',
-                                  {cookieJar,
-                                   'rejectUnauthorized': false,
-                                   // strictSSL: true,
-		                   // ca: caRootCert,
-                                   'responseType':'json'},
-                                 )
-            //console.log('back from attribute grab attempt')
-            t.equal(res.statusCode,200)
-            t.ok(res.body)
-            const u = res.body
-            const expected_fields = ["user_name","credentialType","authenticationDate","authenticationMethod"]
-            expected_fields.forEach( (param) => {
-                t.ok(u[param])
-            })
-        } catch(e) {
-            console.error(e); // 30
-        }
-    }catch(e){
-        console.log('login error?',e)
-        t.fail('login error')
-    }
-
+    const url = 'https://'+ testhost +':'+testport+'/?ticket=%22ST-cif 24r c;erc 24hih ct324nm 34ith lrtnf 34ihj glk3n4fi;h 34;li h3;4io h3;oi4h ioh ewrlf 34oi h3qwrifh3ith23o4ih3;oi4nf;o38h5y;oin3;oin3;4itjhw;einf;32i4hj;liwefn;32l4ihtn;wiefn;lvn3vl;i324jhtliweujtlk3n4l;3wi4jat/l4ij2;34ijtlwkqerfn;l3i4utop89hf;o34inla rti3q4;tihw;o4ietn2l34i;ht;oaiwrfnl34hta;o84yt;oingl3ns54giajewar;iona4l/5ktn;aienva/l4iht;aienrvl/i54ith23;45iht;aoin;4liaht;oaiwrhf;oi4na;ith;aivnc4;q;ih4;oainflqwek4ntql;iah;voinwletan;oivnq;l4itah/vinq/l4itna/irewht/lknq3/4l5iqthali/wcrn/ql34khtailw/n/4alith/%22'
+    const response_promise =  got(
+        url
+        ,{followRedirect:false
+          //,rejectUnauthorized: false
+          // this works, as long as not hitting CAS test (Docker) server, which at the moment has the wrong set of keys
+          ,strictSSL: true
+	  ,ca: caRootCert
+         })
+          .then((r)=>{
+              t.equal(r.statusCode,307)
+              t.equal(r.headers.location,casurl+'?service=https%3A%2F%2F'+ testhost +'%3A'+testport+'%2F')
+              t.same(r.body,"")
+              t.end()
+          })
+          .catch((e)=>{
+              console.log('error in giant ticket',e)
+              t.fail()
+              t.end()
+          })
+    return response_promise
 }
 
 
 const  main = async () => {
-    //await tap.test('gen root pem', gen_root_pem)
-    // var s, key, cert, caRootKey, caRootCert;
-    caRootCert = fs.readFileSync('test/fixtures/keys/keystore_tests/root.pem', 'utf8')
-    caRootKey  = fs.readFileSync('test/fixtures/keys/keystore_tests/root_key.pem', 'utf8')
-    //console.log(caRootCert)
+    await tap.test('gen root pem', gen_root_pem)
     await tap.test('gen pem',gen_pem)
-    //cert = fs.readFileSync('test/fixtures/keys/keystore_tests/cas_node_tests.pem')
-    //key = fs.readFileSync('test/fixtures/keys/keystore_tests/cas_node_tests_key.pem')
-
     const server_info = await setup_server()
 
     tap.context.server_store = server_info
     //test.context.server_store = server_info
 
-    await tap.test('should reply with an empty json object when no session is established',no_session)
-    await tap.test('should return the current user name when there is a session',user_name_session)
-    //console.log('comes second')
+    await tap.test('should reject a giant ticket',giant_ticket)
+
     await close_server(server_info)
-    //console.log('tests are all done!')
+    console.log('tests are all done!')
     tap.end()
 }
 main()

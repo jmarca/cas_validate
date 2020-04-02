@@ -1,0 +1,33 @@
+keytool -genkeypair -storepass changeit -keypass changeit -keystore thekeystore -alias root -dname CN=root
+# keytool -genkeypair -storepass changeit -keypass changeit -keystore thekeystore -alias cas -dname CN=cas -ext san=dns:cas
+
+keytool -genkeypair -alias cas \
+                    -keyalg RSA \
+                    -keypass changeit -storepass changeit \
+                    -keystore thekeystore \
+                    -dname  "CN=cas,OU=Activimetrics,OU=Com,C=US" \
+                    -ext SAN="dns:cas,dns:localhost,ip:0.0.0.0"
+
+keytool -genkeypair -storepass changeit -keypass changeit -keystore thekeystore -alias cas_node_tests -dname CN=cas_node_tests
+
+keytool -storepass changeit -keypass changeit -keystore thekeystore -alias cas -certreq  |
+    keytool -storepass changeit -keypass changeit -keystore thekeystore -alias root -gencert -ext san="dns:cas,dns:localhost,ip:0.0.0.0" |
+    keytool -storepass changeit -keypass changeit -keystore thekeystore -alias cas -importcert
+
+keytool -storepass changeit -keypass changeit -keystore thekeystore -alias cas_node_tests -certreq  |
+    keytool -storepass changeit -keypass changeit -keystore thekeystore -alias root -gencert  |
+    keytool -storepass changeit -keypass changeit -keystore thekeystore -alias cas_node_tests -importcert
+
+keytool -importkeystore  -srcstorepass changeit  -srckeypass changeit  -srckeystore thekeystore \
+        -destkeystore cas_node_tests.p12 -deststoretype PKCS12   -srcalias cas_node_tests  -deststorepass changeit
+
+keytool -importkeystore  -srcstorepass changeit  -srckeypass changeit  -srckeystore thekeystore \
+        -destkeystore root.p12 -deststoretype PKCS12   -srcalias root  -deststorepass changeit
+
+openssl pkcs12 -in cas_node_tests.p12  -nokeys -out cas_node_tests.pem
+openssl pkcs12 -in cas_node_tests.p12  -nodes -nocerts -out cas_node_tests_key.pem
+openssl pkcs12 -in root.p12  -nokeys -out root.pem
+openssl pkcs12 -in root.p12  -nodes -nocerts -out root_key.pem
+
+
+keytool -exportcert -alias cas -storepass changeit -keystore thekeystore -file cas.cer

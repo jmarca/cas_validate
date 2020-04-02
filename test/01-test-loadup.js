@@ -6,8 +6,6 @@ const chost = env.CAS_HOST || 'cas';
 const cport = env.CAS_PORT || '8443';
 const cuser = env.CAS_USER;
 const cpass = env.CAS_PASS;
-const casservice = 'https://'+chost+':'+cport+'/'
-const casurl = casservice + 'cas/login'
 
 const testhost = env.CAS_VALIDATE_TEST_URL || '127.0.0.1'
 var testport = env.CAS_VALIDATE_TEST_PORT || 3000
@@ -38,6 +36,7 @@ function setup_server(){
 
                        }))
           .use(cas_validate.redirect({'cas_host':chost
+                                      ,'cas_port':cport
                                       ,'service':'http://'+ testhost +':'+port+'/index.html'})
               )
           .use(function(req, res, next){
@@ -66,6 +65,7 @@ function setup_server_http(){
 
                        }))
           .use(cas_validate.redirect({'cas_host':'http://'+chost
+                                      ,'cas_port':80
                                       ,'service':'http://'+ testhost +':'+port+'/index.html'})
               )
           .use(function(req, res, next){
@@ -93,6 +93,7 @@ function setup_server_https(){
 
                        }))
           .use(cas_validate.redirect({'cas_host':'https://'+chost
+                                      ,'cas_port':443
                                       ,'service':'http://'+ testhost +':'+port+'/index.html'})
               )
           .use(function(req, res, next){
@@ -121,9 +122,11 @@ function close_server(server_store){
     return result
 }
 
-function server_test(setup){
+function server_test(setup,casport){
 
     async function handler (t){
+        const casservice = 'https://'+chost+':'+casport+'/'
+        const casurl = casservice + 'cas/login'
         const server_store = await setup()
         const myport = server_store.port
         const result = await agent
@@ -150,12 +153,12 @@ function server_test(setup){
 
 
 function runit() {
-    return tap.test('initialize server',server_test(setup_server))
+    return tap.test('initialize server',server_test(setup_server,'8443'))
         .then(()=>{
-            tap.test('initialize server http',server_test(setup_server_http))
+            tap.test('initialize server http',server_test(setup_server_http,'80'))
         })
         .then(()=>{
-            tap.test('initialize server https',server_test(setup_server_https))
+            tap.test('initialize server https',server_test(setup_server_https,'443'))
         })
         .then(()=>{
             tap.end()
