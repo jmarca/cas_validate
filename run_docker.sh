@@ -71,10 +71,6 @@ redis_nw(){
     docker network create --driver bridge redis_nw
 }
 
-openldap_nw(){
-    docker network create --driver bridge openldap_nw
-}
-
 cas(){
     del_stopped cas
     relies_on openldap
