@@ -83,10 +83,10 @@ cas(){
     #        -v /etc/localtime:/etc/localtime:ro \
     #        --network=cas_nw \
     #        --name="cas"  jmarca/cas
-    docker create --rm \
+    docker create --rm  \
            -v /etc/localtime:/etc/localtime:ro \
            --network cas_nw \
-           --name cas jmarca/cas-overlay-template
+           --name cas jmarca/cas:6.2.0-SNAPSHOT
     docker network connect openldap_nw cas
     # copy in keystore for server
     docker cp ${PWD}/test/fixtures/keys/keystore_tests/thekeystore cas:/etc/cas/thekeystore
@@ -96,8 +96,10 @@ cas(){
     docker cp ${PWD}/test/fixtures/cas/cas.properties cas:/etc/cas/config/cas.properties
     # start the container
     docker start cas
-    # docker attach cas_node_tests
-    #      -p 8080:8080 -p 8443:8443 \
+
+    # if you want to follow along what cas is doing, then do
+    # docker attach cas
+
 }
 
 redis(){
@@ -141,7 +143,7 @@ lam(){
 openldap(){
     del_stopped openldap
     relies_on_network openldap_nw
-    docker run --rm -it \
+    docker run --rm -d \
            --network openldap_nw \
            --name openldap \
            -e LDAP_DOMAIN="activimetrics.com" \
@@ -161,8 +163,8 @@ openldap(){
 cas_node_test(){
     docker stop cas_node_tests
     del_stopped "cas_node_tests"
-    relies_on cas redis
     relies_on_network cas_nw redis_nw
+    relies_on cas redis
     docker create --rm -it -u node -v ${PWD}:/usr/src/dev  -w /usr/src/dev  --network redis_nw --name cas_node_tests jmarca/cas_node_tests bash
     docker network connect cas_nw cas_node_tests
     docker start cas_node_tests

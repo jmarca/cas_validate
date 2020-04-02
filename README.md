@@ -25,6 +25,179 @@ been stuck for years in a state of un-testedness, and as I'm finally
 putting in some work trying to remedy that situation, I figure now is
 as good a time as any to move on from Request.
 
+And with this push, that work is done.  Tests pass too.
+
+# Testing things and notes on latest updates
+
+I don't use this code in practice anymore, but it has been bothering
+me for years that I didn't have a good testing setup.  This past
+summer (August 2019) I was able to finally get a CAS server up and
+running under Docker.  My repo for that is
+[here](https://github.com/jmarca/cas_overlay_template).  I forked the
+original `cas_overlay_template` repo and tweaked the gradle compiling
+settings in order to enable LDAP authentication.
+
+The testing setup is encapsulated in my `run_docker.sh` file.  This
+isn't really a `sh` file, but rather more like a `bashrc` file, in
+that it just creates a bunch of functions that run docker commands and
+such.
+
+In order to test my code, the idea is that you have to fire up an LDAP
+container, a CAS container, and a third node.js container to run this
+code.  To make that easy, the `run_docker.sh` command sets up
+dependencies between the different containers and container networks.
+
+## Steps to run tests
+
+(Note, I run linux.  I've no idea how to do any of this on Windows,
+but a Mac might work out of the box if you have the docker tool chain
+installed.)
+
+### Step 0: source the aliases
+
+The zeroth test is to open up a terminal shell window (my daughters
+call it "the black box") and source the `run_docker.sh` file, as
+follows:
+
+```bash
+. run_docker.sh
+```
+
+This will load up a bunch of aliases in the current command line
+environment.
+
+### Step 1: build the node docker image
+
+The first step is to build the `cas_node_tests` image that can run
+this code.  In the same shell in which you source the `run_docker.sh`
+file, execute the following command:
+
+```bash
+make_cas_node_tests_docker
+```
+
+This will build a new docker image using the Dockerfile found in this
+repository.  Alternately, you can instead run
+
+```bash
+docker build  -t jmarca/cas_node_tests .
+```
+
+If all goes well, you should see some complaints about deprecated
+node.js libraries, and then the build should finish with something
+like:
+
+```
+...
+Removing intermediate container 86883a14e082
+ ---> 987bf3c2c600
+Step 10/10 : CMD [ "npm", "start" ]
+ ---> Running in 6ca824e68aa2
+Removing intermediate container 6ca824e68aa2
+ ---> 012985a8c476
+Successfully built 012985a8c476
+Successfully tagged jmarca/cas_node_tests:latest
+```
+
+
+### Step 2: fire up the test environment
+
+Once the needed container is built, the idea is to launch a shell
+inside of that container that lets you run the tests.  To do that,
+simply execute the function `cas_node_test`:
+
+```bash
+cas_node_test
+```
+
+This should start a few needed networks, start some containers, and
+then load the `cas_node_tests` container that was built in the
+previous step.  The output should look like this:
+
+```
+james at farfalla in ~/repos/jem/cas_validate on master [!?]
+$ cas_node_test
+Error response from daemon: No such container: cas_node_tests
+cas_nw is not up, starting it for you.
+a69d66d35df366171531e383192184ee2d3223b84072a8000e639d14098d8a88
+redis_nw is not up, starting it for you.
+ceadfcf1f57c5de6829e02abcc0063cee9a97001162313762f093665ce1f4da4
+cas is not running, starting it for you.
+openldap is not running, starting it for you.
+openldap_nw is not up, starting it for you.
+0b0fcde7c60a29067ea2b632e3833fc7fe6826d668c1fc7f7e09bbc0c0cde2a8
+f22f322d21d6538b5dfbe26ef7fbb877ca272828312f77db28341e5893fa298d
+1555ed92e3bff10b4930876e7b2c43f79192a12dd0ccabcf948f042a5a2c25d2
+cas
+redis is not running, starting it for you.
+1ce014d22a29f9f9dcd451f371dd17bc1d6787fd69bd75c744ed266f5d23dd18
+934ef10dc7053ff31be53360e1cc5100236014b76d5485cb289b044a274627d2
+cas_node_tests
+bash-5.0$
+```
+
+The final prompt means your in bash, ready to run the tests.  The
+build command should have installed all the node libraries, but just
+in case, install them, then run the tests:
+
+```
+bash-5.0$ npm install
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 (node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@2.1.2: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+
+audited 1719 packages in 2.341s
+
+19 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+bash-5.0$ npm test
+
+> cas_validate@0.1.9 test /usr/src/dev
+> NODE_ENV='test' tap test/**/*-test*.js --cov
+
+test/01-test-loadup.js 1> in ticket store, redishost is redis
+test/01-test-loadup.js 1> {"message":"setting login service endpoint on CAS server to /cas/login","level":"info"}
+...
+test/06-test-xml-parser.js 1> server up: cas_node_tests 3002
+ PASS  test/06-test-xml-parser.js 24 OK 500.848ms
+
+
+  🌈 SUMMARY RESULTS 🌈
+
+
+Suites:   6 passed, 6 of 6 completed
+Asserts:  100 passed, of 100
+Time:     31s
+----------------------|----------|----------|----------|----------|-------------------|
+File                  |  % Stmts | % Branch |  % Funcs |  % Lines | Uncovered Line #s |
+----------------------|----------|----------|----------|----------|-------------------|
+All files             |    70.32 |    51.63 |     61.4 |    71.18 |                   |
+ cas_validate.js      |      100 |      100 |      100 |      100 |                   |
+ check_or_redirect.js |    57.69 |       25 |       50 |       60 |... 35,36,38,42,46 |
+ force_protocol.js    |       95 |    92.31 |      100 |      100 |             45,62 |
+ invalidate.js        |    26.67 |        0 |        0 |    26.67 |... 48,49,50,52,61 |
+ logger.js            |       65 |    58.33 |      100 |       65 |... 20,27,29,30,36 |
+ logout.js            |    75.76 |    41.67 |       80 |    78.13 |... 40,41,42,44,45 |
+ redirect.js          |    94.12 |       70 |      100 |    96.97 |                63 |
+ sax_parser.js        |    23.73 |    23.33 |       25 |    23.73 |... ,97,99,101,163 |
+ session_or_abort.js  |       25 |        0 |        0 |       25 | 14,15,16,18,20,21 |
+ ssoff.js             |    90.91 |       50 |      100 |    90.91 |                 9 |
+ ticket.js            |    81.48 |       65 |       60 |    83.02 |... 99,100,115,116 |
+ ticket_store.js      |       78 |    45.83 |       80 |       78 |... 0,91,94,96,133 |
+ xml_parser.js        |     87.5 |    56.67 |    72.73 |     87.5 |... 86,187,188,190 |
+----------------------|----------|----------|----------|----------|-------------------|
+bash-5.0$
+```
+
+(The tests take a while (31 seconds in the above run), because there
+are a few `sleep`s in there to allow tickets to time out.)
+
+As you can see, test coverage is not great.  I'm working on that.
+
+
+
+
 
 # Redis version 2.6
 
