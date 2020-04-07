@@ -23,7 +23,7 @@
     "got": "^10.7.0",
     "libxmljs2": "^0.21.4",
     "redis": "^2.8.0",
-    "underscore": "^1.9.1",
+    "underscore": "^1.10.2",
     "winston": "^3.2.1"
   },
   "devDependencies": {
