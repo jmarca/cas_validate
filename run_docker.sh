@@ -171,5 +171,9 @@ cas_node_dev(){
     del_stopped "cas_node_dev"
     relies_on cas redis
     relies_on_network redis_nw cas_nw
-    docker run --rm -it -u node --network cas_nw -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network=cas_nw  --network redis_nw --name cas_node_dev node:12 bash
+    docker create --rm -it -u node  -v ${PWD}:/usr/src/dev  -w /usr/src/dev --network redis_nw --name cas_node_dev node:12 bash
+    docker network connect cas_nw cas_node_tests
+    docker start cas_node_tests
+    docker attach cas_node_tests
+
 }
