@@ -24,7 +24,7 @@
     "libxmljs2": "^0.25.3",
     "redis": "^2.8.0",
     "underscore": "^1.10.2",
-    "winston": "^3.2.1"
+    "winston": "^3.3.2"
   },
   "devDependencies": {
     "agentkeepalive": "^4.1.2",
