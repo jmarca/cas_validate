@@ -21,20 +21,20 @@
   },
   "dependencies": {
     "got": "^10.7.0",
-    "libxmljs2": "^0.25.3",
+    "libxmljs2": "^0.25.5",
     "redis": "^2.8.0",
     "underscore": "^1.10.2",
-    "winston": "^3.2.1"
+    "winston": "^3.3.3"
   },
   "devDependencies": {
-    "agentkeepalive": "^4.1.2",
+    "agentkeepalive": "^4.1.3",
     "connect": "^3.7.0",
     "connect-redis": "^3.4.1",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "lodash": "^4.17.15",
     "pem": "^1.14.4",
-    "superagent": "^5.2.2",
+    "superagent": "^5.3.1",
     "tap": "^14.10.7",
     "tough-cookie": "^3.0.0"
   },
