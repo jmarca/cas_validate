@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "got": "^10.7.0",
-    "libxmljs2": "^0.25.5",
+    "libxmljs2": "^0.26.6",
     "redis": "^2.8.0",
     "snyk": "^1.316.1",
     "underscore": "^1.10.2",
