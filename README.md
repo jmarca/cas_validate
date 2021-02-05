@@ -136,7 +136,7 @@ cas_node_tests
 bash-5.0$
 ```
 
-The final prompt means your in bash, ready to run the tests.  The
+The final prompt means you're in bash, ready to run the tests.  The
 build command should have installed all the node libraries, but just
 in case, install them, then run the tests:
 
