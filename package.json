@@ -17,14 +17,17 @@
     "node": "*"
   },
   "scripts": {
-    "test": "NODE_ENV='test' tap test/**/*-test*.js --cov"
+    "test": "NODE_ENV='test' tap test/**/*-test*.js --cov",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "dependencies": {
     "got": "^10.7.0",
     "libxmljs2": "^0.25.5",
     "redis": "^2.8.0",
     "underscore": "^1.10.2",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "agentkeepalive": "^4.1.3",
@@ -46,5 +49,6 @@
     "url": "https://github.com/jmarca/cas_validate/issues"
   },
   "homepage": "https://github.com/jmarca/cas_validate#readme",
-  "main": "index.js"
+  "main": "index.js",
+  "snyk": true
 }
