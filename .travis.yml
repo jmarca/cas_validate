@@ -13,7 +13,7 @@ before_install:
   - docker run -d  -p 8443:8443 --name="cas"  apereo/cas:v$CAS_VERSION
 
 before_script:
-  - while [ $? -ne 0 ]; do sleep 5 && curl -v https://localhost:8443; done
+  - while [ $? -ne 0 ]; do sleep 5 && curl -v -k https://localhost:8443; done
   - echo '127.0.0.1 cas.example.org' >> /etc/hosts
   # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   # - chmod +x ./cc-test-reporter
