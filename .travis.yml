@@ -1,9 +1,15 @@
 language: node_js
 node_js:
   - 14
+arch: amd64
 env:
   global:
     - CAS_VERSION=6.2.0
+
+addons:
+  hosts:
+    - cas.example.org
+
 
 services:
   - docker
@@ -14,7 +20,7 @@ before_install:
 
 before_script:
   - while [ $? -ne 0 ]; do sleep 5 && curl -v -k https://localhost:8443; done
-  - sudo echo '127.0.0.1 cas.example.org' >> /etc/hosts
+
   # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   # - chmod +x ./cc-test-reporter
   # - ./cc-test-reporter before-build
