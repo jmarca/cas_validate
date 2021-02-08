@@ -14,7 +14,7 @@ before_install:
 
 before_script:
   - while [ $? -ne 0 ]; do sleep 5 && curl -v -k https://localhost:8443; done
-  - echo '127.0.0.1 cas.example.org' >> /etc/hosts
+  - sudo echo '127.0.0.1 cas.example.org' >> /etc/hosts
   # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   # - chmod +x ./cc-test-reporter
   # - ./cc-test-reporter before-build
