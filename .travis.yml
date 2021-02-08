@@ -1,7 +1,7 @@
 language: node_js
 node_js:
-  - "node:14"
-
+  - 14
+  - 12
 env:
   global:
     - CAS_VERSION=5.3.10
