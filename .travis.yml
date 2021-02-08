@@ -3,7 +3,7 @@ node_js:
   - 14
 env:
   global:
-    - CAS_VERSION=6.2.0-SNAPSHOT
+    - CAS_VERSION=6.2.0
 
 services:
   - docker
