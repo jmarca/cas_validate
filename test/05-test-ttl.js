@@ -173,8 +173,11 @@ const baseUrl = 'https://'+ testhost +':'+testport+'/'
 function setup_server(store_ttl){
 
     const port = testport
-    const store1 = new RedisStore({host:redishost,  ttl: store_ttl * process.env.CAS_SESSION_TTL})
-    const store2 = new RedisStore({host:redishost,  ttl: store_ttl * process.env.CAS_SESSION_TTL})
+    let redisClient = redis.createClient( {host:redishost})
+    const store1 = new RedisStore({ client: redisClient, ttl: store_ttl * process.env.CAS_SESSION_TTL})
+
+    let redisClient2 = redis.createClient( {host:redishost})
+    const store2 = new RedisStore({client: redisClient2,  ttl: store_ttl * process.env.CAS_SESSION_TTL})
     const app = connect()
           .use(session({ 'store': store1,
                          'secret': 'barley waterloo napoleon',

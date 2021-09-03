@@ -209,7 +209,8 @@ function cas_logout_function(rq,callback){
 
 function setup_server(){
     const port = testport
-    const store = new RedisStore({host:redishost,  ttl: 100})
+    let redisClient = redis.createClient( {host:redishost})
+    const store = new RedisStore({ client: redisClient, ttl: 100 })
     const app = connect()
           .use(session({ 'store': store,
                          'secret': 'barley waterloo napoleon',

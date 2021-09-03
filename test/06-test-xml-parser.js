@@ -122,7 +122,8 @@ function fake_cas_server(){
 function test_umlaut(t){
 
     const port = testport
-    const store1 = new RedisStore({host:redishost,  ttl: 2})
+    let redisClient = redis.createClient( {host:redishost})
+    const store1 = new RedisStore({ client: redisClient, ttl: 2 })
     const app = connect()
           .use(session({ 'store': store1,
                          'secret': 'barley waterloo napoleon',
@@ -199,7 +200,8 @@ function test_umlaut(t){
 function test_failed_login(t){
 
     const port = testport
-    const store = new RedisStore({host:redishost,  ttl: 2})
+    let redisClient = redis.createClient( {host:redishost})
+    const store = new RedisStore({ client: redisClient, ttl: 2 })
     const dummy_handler = function(e){}
 
     const app = connect()
@@ -259,7 +261,8 @@ function test_failed_login(t){
 
 function test_failed_ticket(t){
 
-    const store = new RedisStore({host:redishost,  ttl: 2})
+    let redisClient = redis.createClient( {host:redishost})
+    const store = new RedisStore({ client: redisClient, ttl: 2 })
     const dummy_handler = function(e){}
     const port = testport + 2
     const app = connect()
@@ -324,7 +327,8 @@ function test_failed_ticket(t){
 
 // the other xml file from github
 function test_parse_user_doc(t){
-    const store = new RedisStore({host:redishost,  ttl: 2})
+    let redisClient = redis.createClient( {host:redishost})
+    const store = new RedisStore({ client: redisClient, ttl: 2 })
     const dummy_handler = function(e){}
     const port = testport + 2
     const app = connect()
