@@ -15,8 +15,10 @@ const agent = sa.agent();
 const redishost = env.REDIS_HOST || 'redis'
 const redis = require('redis')
 
-const session = require('express-session');
-const RedisStore = require('connect-redis')(session);
+const session = require('express-session')
+
+let RedisStore = require('connect-redis')(session)
+
 const connect = require('connect')
 
 process.env.CAS_SESSION_TTL=2
@@ -26,8 +28,9 @@ const http = require('http')
 var client
 
 function setup_server(){
+    let redisClient = redis.createClient( {host:redishost})
     const port = testport++
-    const store = new RedisStore({host:redishost,  ttl: 100})
+    const store = new RedisStore({ client: redisClient,  ttl: 100 })
     const app = connect()
           .use(session({ 'store': store,
                          'secret': 'barley waterloo napoleon',
@@ -55,8 +58,9 @@ function setup_server(){
 
 }
 function setup_server_http(){
+    let redisClient = redis.createClient( {host:redishost})
     const port = testport++
-    const store = new RedisStore({host:redishost,  ttl: 100})
+    const store = new RedisStore({ client: redisClient,  ttl: 100 })
     const app = connect()
           .use(session({ 'store': store,
                          'secret': 'barley waterloo napoleon',
@@ -83,8 +87,9 @@ function setup_server_http(){
     })
 }
 function setup_server_https(){
+    let redisClient = redis.createClient( {host:redishost})
     const port = testport++
-    const store = new RedisStore({host:redishost,  ttl: 100})
+    const store = new RedisStore({ client: redisClient, ttl: 100 })
     const app = connect()
           .use(session({ 'store': store,
                          'secret': 'barley waterloo napoleon',
@@ -146,7 +151,7 @@ function server_test(setup,casport){
               }).then(()=>{
                   return close_server(server_store)
               })
-        //console.log('hate coursing through your veins')
+        console.log('hate coursing through your veins')
     }
     return handler
 }
