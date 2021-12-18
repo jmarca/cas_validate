@@ -26,7 +26,7 @@
     "libxmljs2": "^0.26.6",
     "redis": "^3.1.2",
     "snyk": "^1.697.0",
-    "underscore": "^1.10.2",
+    "underscore": "^1.13.2",
     "winston": "^3.3.3"
   },
   "devDependencies": {
