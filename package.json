@@ -27,7 +27,7 @@
     "redis": "^3.1.2",
     "snyk": "^1.834.0",
     "underscore": "^1.13.2",
-    "winston": "^3.5.0"
+    "winston": "^3.6.0"
   },
   "devDependencies": {
     "agentkeepalive": "^4.1.3",
