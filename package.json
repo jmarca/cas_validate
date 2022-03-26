@@ -37,7 +37,7 @@
     "express-session": "^1.17.1",
     "pem": "^1.14.4",
     "superagent": "^5.3.1",
-    "tap": "^15.0.9",
+    "tap": "^16",
     "tough-cookie": "^3.0.0"
   },
   "repository": {
