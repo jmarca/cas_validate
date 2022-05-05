@@ -18,14 +18,14 @@
   },
   "scripts": {
     "test": "NODE_ENV='test' tap test/**/*-test*.js --cov",
-    "snyk-protect": "snyk protect",
+    "snyk-protect": "snyk-protect",
     "prepare": "npm run snyk-protect"
   },
   "dependencies": {
+    "@snyk/protect": "^1.657.0",
     "got": "^10.7.0",
     "libxmljs2": "^0.30.1",
     "redis": "^3.1.2",
-    "snyk": "^1.904.0",
     "underscore": "^1.13.3",
     "winston": "^3.7.2"
   },
