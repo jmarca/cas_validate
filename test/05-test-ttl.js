@@ -13,7 +13,7 @@ const _ = require('lodash')
 const pem = require('pem');
 
 const testhost = env.CAS_VALIDATE_TEST_URL || 'cas_node_tests'
-const testport = env.CAS_VALIDATE_TEST_PORT || 3000
+const testport = env.CAS_VALIDATE_TEST_PORT || 4000
 
 const {promisify} = require('util');
 const got = require('got')
@@ -279,7 +279,7 @@ const dont_sprout_keys = async (t) => {
     // now login
     const result = await cas_login_function(cookieJar)
 
-    var response = await client('/')
+    var response = await client('')
 
     t.is(response.statusCode, 200)
     t.ok(response.body)
@@ -330,7 +330,7 @@ const timeout_keys = async (t) => {
     const keys = await keysAsync('ST*')
     // now login
     const result = await cas_login_function(cookieJar)
-    var response = await client('/')
+    var response = await client('')
     t.is(response.statusCode, 200)
     t.ok(response.body)
     t.equal(response.body,'hello '+cuser)
@@ -407,7 +407,7 @@ const timeout_keys2 = async (t) => {
     const keys = await keysAsync('ST*')
     // now login
     const result = await cas_login_function(cookieJar)
-    var response = await client('/')
+    var response = await client('')
     t.is(response.statusCode, 200)
     t.ok(response.body)
     t.equal(response.body,'hello '+cuser)
