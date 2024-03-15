@@ -82,7 +82,7 @@ cas(){
     docker create --rm  \
            -v /etc/localtime:/etc/localtime:ro \
            --network cas_nw \
-           --name cas jmarca/cas:6.2.x
+           --name cas jmarca/cas:7.1.x
     docker network connect openldap_nw cas
     # copy in keystore for server
     docker cp ${PWD}/test/fixtures/keys/keystore_tests/thekeystore cas:/etc/cas/thekeystore

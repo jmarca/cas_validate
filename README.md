@@ -1,3 +1,9 @@
+# DEPRECATED, UNMAINTAINED
+
+I just spent the afternoon trying to get this up to date.  No joy.
+
+Something is borked with libxml, both libxmljs and libxmljs2.
+
 # CAS Validate
 
 This is a utility to facilitate validating a web service based on

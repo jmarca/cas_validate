@@ -1,11 +1,12 @@
-FROM node:14-alpine
+FROM node:18-alpine
 
 
 # working in /usr/src/dev
 WORKDIR /usr/src/dev
 
-RUN apk add --no-cache libstdc++ bash ca-certificates git python build-base openssl \
-        && npm install -g npm
+RUN apk add --no-cache libxml2 libxml2-dev libstdc++ bash ca-certificates git python3 build-base openssl \
+    && npm install -g npm \
+    && npm install -g node-gyp
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
